@@ -32,6 +32,24 @@ The recommender consists of the following parts: TODO
 
 ### Data Sources
 
+**Stock Data**
+
+* Alpha Vantage Data (through [alpha-vantage](https://github.com/RomelTorres/alpha_vantage)) - Allows to retrieve daily stock data
+* Quandl Data (through [quandl](https://github.com/quandl/quandl-python))
+
+**Quarterly Reports**
+
+TODO
+
+**News Ticker**
+
+* Twitter Data
+* RSS Feeds - This allows us to basically read in any news source (using [feedparser](https://github.com/kurtmckee/feedparser))
+
+Sources of RSS Data:
+
+* Google Alerts - Allow to create a RSS reader based on any topic (using [python library](https://github.com/9b/google-alerts))
+
 ### Data Insights
 
 TODO
@@ -45,7 +63,9 @@ TODO
 I am using the following packages for the system:
 
 * Apache Spark
-* [sklearn-recommender]() (*note: written for this project, but decoupled into a separate repository*)
+* [sklearn-recommender](https://github.com/felixnext/sklearn-recommender) (*note: written for this project, but decoupled into a separate repository*)
+* DS Python Toolstack (Pandas, Numpy, Sklearn, etc.)
+* TensorFlow
 
 ## Future Work
 
