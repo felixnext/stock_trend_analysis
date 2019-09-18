@@ -39,17 +39,46 @@ class FMPStatements(Statements):
     df = fmp_api.statements.balance_sheet(symbol, period=period)
     df = self._filter(df, before, after)
 
-    # TODO: convert data
+    # convert data
+    name_map = {
+      'Total debt': 'debt_total',
+      'Short-term debt': 'debt_shortterm',
+      'Long-term debt': 'debt_longterm',
+      'Total assets': 'assets_total',
+      'Total current assets': 'assets_total_current',
+      'Total non-current assets': 'assets_total_noncurrent',
+      'Tax assets': 'assets_tax',
+      'Total liabilities': 'liability_total',
+      'Tax Liabilities': 'liability_tax',
+      'Deposit Liabilities': 'liability_deposit',
+      'Deferred revenue': 'revenue_deffered',
+      'Investments': 'investments',
+      'Inventories': 'inventory',
+    }
+    type_map = {}
+    df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
 
     return df
 
-  def cash_flow(self, symbol, before=None, after=None):
+  def cash_flow(self, symbol, before=None, after=None, period=None):
     period = self.period if period is None else period
     # retrieve the relevant data
     df = fmp_api.statements.cash_flow(symbol, period=period)
     df = self._filter(df, before, after)
 
-    # TODO: convert data in common format
+    # convert data in common format
+    name_map = {
+      'Capital Expenditure': 'capital_expenditure',
+      'Stock-based compensation': 'compensation_stockbased',
+      'Free Cash Flow': 'cashflow_free',
+      'Investing Cash flow': 'cashflow_invest',
+      'Financing Cash Flow': 'cashflow_finance',
+      'Operating Cash Flow': 'cashflow_operate',
+      'Net Cash/Marketcap': 'cash_marketcap_ratio',
+      'Issuance (buybacks) of shares': 'buybacks',
+      'Dividend payments': 'dividends'
+    }
+    df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
 
     return df
 
@@ -58,5 +87,25 @@ class FMPStatements(Statements):
     # retrieve the relevant data
     df = fmp_api.statements.income(symbol, period=period)
     df = self._filter(df, before, after)
+
+    # convert data in common format
+    name_map = {
+      'EBIT': 'ebit',
+      'EBIT Margin': 'ebit_margin',
+      'EPS': 'eps',
+      'EPS Diluted': 'eps_diluted',
+      'Consolidated Income': 'income_consolidated',
+      'Cost of Revenue': 'revenue_costs',
+      'Gross Profit': 'gross_profit',
+      'Gross Margin': 'gross_margin',
+      'R&D Expenses': 'expenses_research',
+      'Operating Expenses': 'expenses_operating',
+      'Net Income': 'income_net',
+      'Operating Income': 'income_operating',
+      'Dividend per Share': 'dividend_share',
+      'Revenue': 'revenue',
+      'Revenue Growth': 'revenue_growth'
+    }
+    df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
 
     return df
