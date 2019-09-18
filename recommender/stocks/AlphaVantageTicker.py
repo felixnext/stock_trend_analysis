@@ -5,21 +5,26 @@ Defines the stock ticker for the Alpha Vantage API.
 
 from alpha_vantage.timeseries import TimeSeries
 from .Ticker import Ticker, TickerResolution, TickerGranularity
-from stockify import utils
+from recommender import utils
 
 from datetime import datetime
 import pytz
 import re
 
 class AlphaVantageTicker(Ticker):
-  '''Ticker implementation for the Alpha-Vantage API.'''
-  def __init__(self, key, outputsize='full'):
-    '''Creates an AlphaVantage Ticker.
+  '''Ticker implementation for the Alpha-Vantage API.
 
-    Args:
-      key: `str` key for the alpha vantage API
-      outputsize: `str` of either `full` or `compact` that defines the return values from the API.
-    '''
+  Example:
+    ```
+    ticker = AlphaVantageTicker('<KEY>')
+    data = ticker.historic('MSFT', start=None)
+    ```
+
+  Args:
+    key: `str` key for the alpha vantage API
+    outputsize: `str` of either `full` or `compact` that defines the return values from the API.
+  '''
+  def __init__(self, key, outputsize='full'):
     # retrieve the data
     self.__key = key
     self.ts = TimeSeries(key=self.__key, output_format='pandas')

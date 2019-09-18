@@ -7,7 +7,7 @@ Used mostly for historic data.
 
 import quandl
 from .Ticker import Ticker
-from stockify import utils
+from recommender import utils
 
 
 class QuandlTicker(Ticker):

@@ -4,17 +4,38 @@ This project contains a stock-recommender system that uses quarterly reports, ne
 
 ## Getting Started
 
-The system deploys as a flask web services. The easiest way to run it is through docker (recommended [nvidia docker]() for TensorFlow components):
+**1. Data Access:**
+
+
+First you will need to create a `keys.csv` file in the root directory that contains the API keys for the various serivces used. You can find the available keys in the `keys.tmp.csv` template.
+
+
+**2. Training:**
+
+
+Next we need to train the machine learning models. TODO
+
+
+**3. Deploy:**
+
+
+The system deploys as a flask web services. The easiest way to run it is through docker (recommended [nvidia docker](https://github.com/NVIDIA/nvidia-docker) for TensorFlow components):
 
 ```bash
-$ TODO
+$ docker build -t felixnext/stocks .
+$ docker run -d -p 8000:3001 --name stocks -v <PATH>:/storage felixnext/stocks
 ```
+
+The service should now be available under `http://localhost:8000/`
 
 You might also run the system locally through the command line:
 
 ```bash
-$ TODO
+$ cd frontend
+$ python run.py
 ```
+
+The service should now be available under `http://localhost:3001/`
 
 ## Architecture
 
@@ -39,16 +60,23 @@ The recommender consists of the following parts: TODO
 
 **Quarterly Reports**
 
-TODO
+* IEX Cloud (using [iexfinance](https://github.com/addisonlynch/iexfinance))
+* Financial Modeling Prep (using the [API](https://financialmodelingprep.com/developer/docs/) directly)
 
 **News Ticker**
 
-* Twitter Data
+* Twitter Data - (using [tweepy](https://github.com/tweepy/tweepy))
 * RSS Feeds - This allows us to basically read in any news source (using [feedparser](https://github.com/kurtmckee/feedparser))
 
 Sources of RSS Data:
 
 * Google Alerts - Allow to create a RSS reader based on any topic (using [python library](https://github.com/9b/google-alerts))
+* Financial Times [RSS Feed](https://www.ft.com/business-education?format=rss)
+* CNN Money [RSS Feed](http://rss.cnn.com/rss/money_latest.rss)
+
+**Economic Data**
+
+* World Bank - (using [wbdata](https://github.com/oliversherouse/wbdata))
 
 ### Data Insights
 
@@ -64,12 +92,15 @@ I am using the following packages for the system:
 
 * Apache Spark
 * [sklearn-recommender](https://github.com/felixnext/sklearn-recommender) (*note: written for this project, but decoupled into a separate repository*)
-* DS Python Toolstack (Pandas, Numpy, Sklearn, etc.)
+* DS Python Toolstack (Pandas, Numpy, Sklearn, Plotly, Seaborn, sqlalchemy, etc.)
 * TensorFlow
 
 ## Future Work
 
-TODO
+* Create Recommenders for different time frames
+* Integrate multiple higher order features
+* Create additional higher order features (e.g. RNN predictions)
+* Integrate Rule Based approaches (e.g. implement Ben Graham Strategies)
 
 ## License
 
