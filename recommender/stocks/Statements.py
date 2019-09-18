@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 
-def Statements():
+class Statements():
   '''Base Class for retrieving statements about a public traded company.'''
 
   @abstractmethod
@@ -19,8 +19,8 @@ def Statements():
 
     Args:
       symbol (str): Symbol of the company to retrieve data for.
-      before (datetime): Only include statements before the given time
-      after (datetime): Only include statements after the given time
+      before (date): Only include statements before the given time
+      after (date): Only include statements after the given time
 
     Returns:
       DataFrame that contains the list of balance sheets. Different positions are listed as columns and different dates as index
@@ -33,8 +33,22 @@ def Statements():
 
     Args:
       symbol (str): Symbol of the company to retrieve data for.
-      before (datetime): Only include statements before the given time
-      after (datetime): Only include statements after the given time
+      before (date): Only include statements before the given time
+      after (date): Only include statements after the given time
+
+    Returns:
+      DataFrame that contains the cash-flow information. Different positions are listed in columns and different dates as index.
+    '''
+    pass
+
+  @abstractmethod
+  def income(self, symbol, before=None, after=None):
+    '''Retrieves the income statements of a company for a time.
+
+    Args:
+      symbol (str): Symbol of the company to retrieve data for.
+      before (date): Only include statements before the given time
+      after (date): Only include statements after the given time
 
     Returns:
       DataFrame that contains the cash-flow information. Different positions are listed in columns and different dates as index.
