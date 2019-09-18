@@ -39,9 +39,11 @@ The service should now be available under `http://localhost:3001/`
 
 ## Architecture
 
-The goal of the system should be:
+The goal of the system should be to provide recommendations of stocks for a specific user. Therefore the system should leverage the following information:
 
-* TODO
+* User Interest - Which economic field the user wants to invest in (KB Filtering)
+* Specific Stocks - Which stocks liked the user
+* Stock Forecast - Using various sources of information (including news, balance sheet statements and historic stock prices among others) to create a ranking for stocks to suggest potentially profitable stocks to the user
 
 ### General Design
 
@@ -51,11 +53,17 @@ This in turn is used by the `frontend` to be integrated into a flask webapp.
 
 **Recommender**
 
-The recommender consists of the following parts: TODO
+The recommender consists of the following parts:
+
+1. ETL Pipeline - This pipeline uses various APIs (e.g. RSS Feeds, Stock APIs) to gather relevant information and create a list of available stocks with categories to recommend
+2. Higher Order Features - Machine learning pipeline that uses various approaches to generate higher-order features based on the data coming from ETL (e.g. a rating for stock profitability)
+3. User Recommendation - A recommendation system that compares user interest to relevant stocks and computes the higher-order features for these stocks to generate a basic understanding of the data
+
+All pipelines are implemented into a Spark Process, allowing them to easily scale out.
 
 **Frontend**
 
-TODO
+The frontend consists of a simple flask web-app that has access to the spark pipeline. From there it can retrieve information and render general stock information to the user.
 
 ### Data Sources
 
