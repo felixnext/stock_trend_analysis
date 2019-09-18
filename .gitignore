@@ -1,3 +1,6 @@
 __pycache__
 .ipynb_checkpoints
 keys.csv
+data/*.zip
+data/ETFs
+data/Stocks

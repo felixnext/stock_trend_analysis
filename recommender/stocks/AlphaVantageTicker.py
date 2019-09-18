@@ -21,10 +21,13 @@ class AlphaVantageTicker(Ticker):
     ```
 
   Args:
-    key: `str` key for the alpha vantage API
+    key: `str` key for the alpha vantage API (if None try to load through `utils.read_keys()`)
     outputsize: `str` of either `full` or `compact` that defines the return values from the API.
   '''
-  def __init__(self, key, outputsize='full'):
+  def __init__(self, key=None, outputsize='full'):
+    # check if key should be updated
+    if key is None:
+      key = utils.read_keys()['alphavantage']
     # retrieve the data
     self.__key = key
     self.ts = TimeSeries(key=self.__key, output_format='pandas')
@@ -113,7 +116,7 @@ class AlphaVantageTicker(Ticker):
     # format the data
     tz = pytz.timezone(md[self.__search_key(md, "Time Zone")])
     data.rename(columns={'1. open':'open', '2. high':'high', '3. low':'low', '4. close': 'close', '5. volume': 'volume'}, inplace=True)
-    data.index = data.index.map( lambda x:tz.localize( datetime.strptime(x, time_format) ) )
+    data.index = data.index.map( lambda x:tz.localize( x ) )
 
     # filter on the given time series
     if end is not None:

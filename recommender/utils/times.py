@@ -84,9 +84,17 @@ def unix_to_datetime(ts, tz=None):
     raise ValueError("Given object ({}) is not a valid int or long item!".format(ts))
 
 def parse_time(time_str, format, timezone):
+  '''Parses the given time based on the format and timezone (if provdied).
+
+  Returns:
+    (timzone-aware) datetime object
+  '''
   if isinstance(timezone, str):
     timezone = find_timezone(timezone)
-  dt = datetime.strptime(time_str, format)
+  if isinstance(time_str, datetime):
+    dt = time_str
+  else:
+    dt = datetime.strptime(time_str, format)
   if timezone is not None:
     dt = dt.replace(tzinfo=timezone)
   return dt

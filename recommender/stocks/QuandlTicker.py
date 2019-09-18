@@ -6,7 +6,7 @@ Used mostly for historic data.
 
 
 import quandl
-from .Ticker import Ticker
+from .Ticker import Ticker, TickerResolution, TickerGranularity
 from recommender import utils
 
 
@@ -14,19 +14,21 @@ class QuandlTicker(Ticker):
   '''Ticker implementation for the Quandl API.
 
   Note that Quandl does not provide real-time data and has a delay of at-least 1 day. It also provides rarely a resolution finer than daily.
+
+  Args:
+    key: `str` API key used for quandl access (if None try to load it through `utils.read_keys`)
   '''
 
-  def __init__(self, key):
-    '''Creates a quandl ticker.
-
-    Args:
-      key: `str` API key used for quandl access
-    '''
+  def __init__(self, key=None):
+    # check if key is none
+    if key is None:
+      key = utils.read_keys()['quandl']
+    # setup system
     self.__key = key
     # set the key to config
     quandl.ApiConfig.api_key = self.__key
 
-  def _udpate_symbol(self, symbol):
+  def _update_symbol(self, symbol):
     '''Updates the given symbol for the quandl API.'''
     # check if the symbol exists on the QUANDL
     # TODO: extent list
