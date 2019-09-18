@@ -66,9 +66,12 @@ The system uses various sources of data. However, as financial apis appear incom
 * Alpha Vantage Data (through [alpha-vantage](https://github.com/RomelTorres/alpha_vantage)) - Allows to retrieve daily stock data (including long range historic data). It also allows to retrieve intra-day data (in 15min intervals)
 * Quandl Data (through [quandl](https://github.com/quandl/quandl-python)) - Allows to retrieve intraday trading data (however does not have long term historic data in free plans)
 
-Training Data
+*Training Data*
 
 * For training an additional [stock market dataset](https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs) is used to account for historic data
+
+> Note: There is a download script to retrieve the data in `data` folder. Before you run it, make sure you have the [kaggle-cli](https://github.com/Kaggle/kaggle-api) installed and setup
+
 
 **Quarterly Reports**
 
@@ -113,6 +116,7 @@ I am using the following packages for the system:
 * Integrate multiple higher order features
 * Create additional higher order features (e.g. RNN predictions)
 * Integrate Rule Based approaches (e.g. implement Ben Graham Strategies)
+* Implement better error handling for `financialmodelingprep`
 
 ## License
 
