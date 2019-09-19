@@ -19,6 +19,17 @@ Next we need to train the machine learning models. TODO
 **3. Deploy:**
 
 
+The simplest way to execute the project, is using the streamlit report. Simply install streamlit (`pip install streamlit`) and execute the report file:
+
+```bash
+$ cd notebooks
+$ streamlit run 09-1_project-report.py
+```
+
+
+> Note: The web-app is currently not functional, but will come soon.
+
+
 The system deploys as a flask web services. The easiest way to run it is through docker (recommended [nvidia docker](https://github.com/NVIDIA/nvidia-docker) for TensorFlow components):
 
 ```bash
@@ -107,7 +118,25 @@ TODO
 
 ### ML Pipeline Design
 
-TODO
+The pipeline has two core components: The stock classifier (higher order features) and the actual recommender system.
+
+#### Stock Classifier
+
+There are multiple approaches for classification that
+
+* MutliOutput - Logistic Regression
+* Feedforward Network
+* RNN on historic stock data (GRU)
+
+The stock classifier is tested on historic stock data (test-set that is hold-out from the training set). The categories and time-frames are clearly defined.
+
+**Experiments**
+
+The performance of the classifier is measured through accuracy and a custom metric (as the result is a ordered scale, we can penalize close categories).
+
+#### Recommender
+
+The recommender
 
 ## Dependencies
 

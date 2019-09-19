@@ -8,10 +8,41 @@ Use-Cases:
 
 from abc import ABC, abstractmethod
 import pandas as pd
+import functools
 
 
 class Statements():
   '''Base Class for retrieving statements about a public traded company.'''
+
+  def merge_records(self, stocks, before=None, after=None):
+    '''Merges different statements into one dataframe.'''
+    # iterate through all data
+    dfs = []
+    for stock in stocks:
+      # retrieve data
+      df_state = []
+      try:
+        df_state.append(self.balance_sheet(stock, before, after))
+      except: pass
+      try:
+        df_state.append(self.income(stock, before, after))
+      except: pass
+      try:
+        df_state.append(self.cash_flow(stock, before, after))
+      except: pass
+
+      # check if valid
+      if len(df_state) == 0: continue
+
+      # merge data
+      df = functools.reduce(lambda acc, val: acc.join(val), df_state).reset_index()
+      df['symbol'] = stock
+
+      # add data
+      dfs.append(df)
+
+    # combine all
+    return pd.concat(dfs, axis=0, sort=True)
 
   @abstractmethod
   def balance_sheet(self, symbol, before=None, after=None):
