@@ -1,5 +1,7 @@
 # Stock Trend Recommender System
 
+**Keywords**: Recommender-System, Regression, Stock-Prediction
+
 ## Motivation
 
 This project contains a stock-recommender system that uses quarterly reports, news information pieces and stock prices to recommend relevant stocks for further (manual) analysis based on user interest (e.g. resources or tech-companies). The system is designed for relevance, novelty and serendipity (with configurable parameters) to allow exploration of potential n-bagger stocks.
@@ -12,7 +14,7 @@ Due to timely constraints for this project the overall goal is narrowed down to:
 
 * Retrieve and clean stock data (i.e. stock prices, company statements) from various sources
 * Use this stock data to predict the profitability of a stock on multiple time-scales
-* Combine both features to compute a similiarity between stocks and provide recommendations to the user based on input keywords and stock ranking
+* Combine both features to compute a similarity between stocks and provide recommendations to the user based on input keywords and stock ranking
 
 ## Related Work & Libraries
 

@@ -44,6 +44,47 @@ class Statements():
     # combine all
     return pd.concat(dfs, axis=0, sort=True)
 
+  def add_quarter(self, df, date_col='date', change_date=True):
+    '''Updates the given dataframe to include quarter and year columns based on the 'date' column.
+
+    Args:
+      df (DataFrame): DataFrame to update (has to contain a date column)
+      date_col (str): Optional name of the column that contains the date (default: `date`)
+      change_date (bool): Defines if the date col in the dataframe should be changed if it is not a datetime dtype
+
+    Returns:
+      DataFrame with additional `year` and `quarter` columns
+    '''
+    # retrieve the column
+    date = df[date_col]
+    # check type
+    if date.dtype == 'object':
+      date = date.apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
+      if change_date: df[date_col] = date
+
+    # retrieve data
+    df['year'] = date.dt.year
+    df['quarter'] = date.dt.quarter
+
+    return df
+
+  def get_features(self, df, symbols, feat):
+    '''Retrieves features from the statement dataframe.
+
+    Args:
+      symbols (list): list of symbols to use
+      feat (str): Feature to extract
+
+    Returns:
+      DataFrame using
+    '''
+    # check if date is there
+    if 'year' not in df.columns or 'quarter' not in df.columns:
+      df = self.add_quarter(df)
+      
+    # convert and return
+    return df[df['symbol'].isin(symbols)].pivot_table(index=['year', 'quarter'], columns='symbol', values=feat).sort_index(ascending=True)
+
   @abstractmethod
   def balance_sheet(self, symbol, before=None, after=None):
     '''Retrieves the balance sheet for the given year.
