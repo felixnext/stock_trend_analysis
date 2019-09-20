@@ -19,9 +19,13 @@ Due to timely constraints for this project the overall goal is narrowed down to:
 ## Related Work & Libraries
 
 There are several other projects and libraries that are working on similar goals. Most tasks are focused on stock price prediction.
-Those include:
+Examples include:
 
-* TODO
+* [Towards Data Science](https://towardsdatascience.com/stock-prediction-in-python-b66555171a2)
+* [Predition using ML](https://medium.com/@randerson112358/predict-stock-prices-using-python-machine-learning-53aa024da20a)
+* [LSTM Predictions](https://www.datacamp.com/community/tutorials/lstm-python-stock-market)
+
+For the implementation of this project I have used various libraries, which are listed in the `readme.md`.
 
 ## Data Analysis
 
@@ -59,6 +63,18 @@ Since we have no ground-truth data for the similarity between stocks (e.g. a dat
 
 ## Future Work
 
-* News Sentiment Mining
-* More Complex RNN approaches
-* Build an elaborate web-app
+Due to time constraints the current state of the project is not the full scope, and there remains a lot left to do.
+As mentioned in the motivation, news data could be used to provide a broader context of the company position.
+This could be done on a variety of sources (e.g. RSS Feeds, twitter data, news corpora in general (Note: there appears to be a [corpus from HuffPost](https://www.kaggle.com/rmisra/news-category-dataset) with news from 2012 to 2018)).
+This would require broader pre-processing pipeline (including NER and mapping news to relevant stock symbols, document embedding) to create a clean training dataset.
+Such a dataset could be useful to extract further higher order features (e.g. sentiments) to identify psychological trends in the market.
+
+Another way to improve the system would be the usage of more complex prediction methods (e.g. more advanced RNN approaches) or the use of online learning (e.g. through reinforcement learning) to adjust the trading strategy to the user needs.
+
+From the engineering site, the web-app needs to be updated and the spark process could be streamlined.
+
+
+## Conclusion
+
+In this project, we have created a basic trading advisor for stock trading. It comprises a two step ML pipeline (prediction, recommendation) to advise potentially relevant stocks to the user.
+The results show that the system can perform TODO.

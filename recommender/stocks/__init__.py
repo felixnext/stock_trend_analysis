@@ -4,3 +4,4 @@ from .QuandlTicker import *
 from .Statements import *
 from .FMPStatements import *
 from .IEXStatements import *
+from .Cache import *

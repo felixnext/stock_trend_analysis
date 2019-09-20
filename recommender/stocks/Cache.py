@@ -1,5 +1,9 @@
 '''Defines a cache function that loads data from disk.'''
 
+import os
+import glob
+import pandas as pd
+
 class Cache():
   '''Cache Function that stores stock and statement data on disk and loads it if required.
 
@@ -9,8 +13,8 @@ class Cache():
   def __init__(self, cache_folder='../data'):
     self.path = cache_folder
 
-  def list_stocks(self, type='stock'):
-    '''Generates a list of available historic stock data.
+  def list_data(self, type='stock'):
+    '''Generates a list of available symbols for the given data type in cache.
 
     Args:
       type (str): type of data to retrieve (options: 'stock', 'etf', 'statement')
@@ -29,7 +33,7 @@ class Cache():
     # create dict for search
     return dict(zip(names, files))
 
-  def load_stocks(self, symbols, type='stock'):
+  def load_data(self, symbols, type='stock'):
     '''Loads the historic data for the list of given symbols.
 
     Args:
@@ -44,3 +48,16 @@ class Cache():
       # check if data is not given
       if symbol not in stocks:
         pass
+
+  def get_data(self, symbols, ticker=None, statement=None):
+    '''Loads the relevant company data either from the Cache using the APIs.
+
+    Args:
+      symbols (list): List of symbols to load
+      ticker (Ticker): Instance of a ticker to load data through (if None create AlphaVantage)
+      statement (Statement): Instance of the statement to load data through (if None create FMP)
+
+    Returns:
+      DataFrame with the combined data for all given stocks.
+    '''
+    pass
