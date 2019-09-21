@@ -29,3 +29,24 @@ if st.checkbox('Show raw data'):
     st.write(df.head(40))
 
 st.write('Extract features from the given data')
+
+st.subheader("Testing Stock Normalization")
+
+import sys
+sys.path.insert(1, '..')
+import recommender as rcmd
+
+st.write('Load data')
+cache = rcmd.stocks.Cache()
+ls_stocks = cache.list_data()
+sample = np.random.choice(list(ls_stocks.keys()), 30)
+st.write("Relevant Stocks: {}".format(sample))
+
+df_stocks = cache.load_stock_data(sample, ls_stocks)
+
+st.write('Loaded Stock data')
+st.write('Generate normalization')
+
+df_data = rcmd.learning.preprocess.create_stock_dataset(df_stocks, 7, 30, 3)
+
+st.write('Completed normalization')

@@ -36,15 +36,26 @@ This leaves us with the following data sources:
 
 * TODO
 
-### Feature Engineering
-
 In order to retrieve the correct features, we
 
 **Stock Prediction**
 
-* Forward Timestep
-* Last n as Input Features
-* Last n diffs as Input Features
+The goal of the stock prediction system is to use current information:
+
+* Last Statements from a given company
+* Recent stock history
+
+To predict the outcome of the stock data (i.e. would an invest in the stock be profitable over time horizon X). This leaves us with the following parameters for the data training:
+
+1. Time Horizon of prediction (How long do we want to look in the future?)
+2. Amount of Recent Data (Do we just give the current state of a windows of data from the past X days/month?)
+3. Cliping of target values (in which interval is a stock profitable, neutral or unprofitable?)
+3. Normalization of the Data (Do we use absolute values of differences?)
+4. Smoothing of the Data (Do we take the stock closing price on a single day or of a week?)
+
+The last two questions are probably easiest to answer. Since all stocks have different values (i.e. different start prices of the stock and current statement values) and these values do not have an impact on our prediction (if a \\$10 stock rises to \\$200 this is a much better investment than a \\$1000 stocks rise to \\$1500). We will therefore adopt a normalization that takes the current stock price as a starting point and computes percental difference from there. This will provide a normalized scale across all stocks.
+
+For the smoothing we might use a time windows that is dependent on the length of the prediction (e.g. +/- 3 days for a quarter prediction and +/- 1 Week for a year prediction).
 
 ## ML Pipeline Design
 
