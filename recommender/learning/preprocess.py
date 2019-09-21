@@ -7,37 +7,44 @@ from datetime import datetime
 as_strided = np.lib.stride_tricks.as_strided
 
 
+def normalize_stock_array(arr):
+  '''Normalizes the given input array.'''
+  norm = arr[-1]
+  arr = np.divide(arr, norm) - 1
+  return arr
+
+
 def normalize_stock_window(arr, days_back, days_target, smooth_interval):
-    '''Normalizes the stock data in the given window and returns the values and the target
+  '''Normalizes the stock data in the given window and returns the values and the target
 
-    This function should be used on the data returned from a sliding window on the stock data of a single symbol
+  This function should be used on the data returned from a sliding window on the stock data of a single symbol
 
-    Args:
-        arr (np.Array): Numpy Array that contains only one values column
-        days_back (int): How many days of history data should be included
-        days_target (int): How many days shoudl the target value lie ahead
-        smooth_interval (int): Interval in days around the target value that is used for smoothing (if None use just target day)
+  Args:
+    arr (np.Array): Numpy Array that contains only one values column
+    days_back (int): How many days of history data should be included
+    days_target (int): How many days shoudl the target value lie ahead
+    smooth_interval (int): Interval in days around the target value that is used for smoothing (if None use just target day)
 
-    Returns:
-        Numpy array that has the normalized data of length `days_back` and an additional datapoint with the target value
-    '''
-    # retrieve the normalized data
-    norm = arr[days_back - 1]
-    arr = ((arr - norm)  / norm)
+  Returns:
+    Numpy array that has the normalized data of length `days_back` and an additional datapoint with the target value
+  '''
+  # retrieve the normalized data
+  norm = arr[days_back - 1]
+  arr = np.divide(arr, norm) - 1
 
-    # retrieve the input stock values
-    vals = arr[:days_back]
-    # TODO: might call additional compaction (e.g. only weekly data)
+  # retrieve the input stock values
+  vals = arr[:days_back]
+  # TODO: might call additional compaction (e.g. only weekly data)
 
-    # calculate the target value
-    target_loc = days_back + days_target - 1
-    if smooth_interval is None:
-        target = arr[target_loc]
-    else:
-        target = arr[(target_loc - smooth_interval):(target_loc + smooth_interval + 1)].mean()
+  # calculate the target value
+  target_loc = days_back + days_target - 1
+  if smooth_interval is None:
+    target = arr[target_loc]
+  else:
+    target = arr[(target_loc - smooth_interval):(target_loc + smooth_interval + 1)].mean()
 
-    # return result vector
-    return np.concatenate([vals, [norm, target]])
+  # return result vector
+  return np.concatenate([vals, [norm, target]])
 
 def create_stock_dataset(df, days_back, days_target, smooth_interval, value_col='close', jump_size=7):
     '''Creates a dataset from the given stock data.

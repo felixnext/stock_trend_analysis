@@ -34,9 +34,11 @@ As well as actual stock prices and trading volume on a daily opening and closing
 
 This leaves us with the following data sources:
 
-* TODO
+* FinancialModelingPrep - Used for Statement data, company information as well as a general overview of available stocks
+* Kaggle Dataset - Provides cached stock data, which reduces our load on the APIs
+* Alpha-Vantage - Historic and current stock price information
 
-In order to retrieve the correct features, we
+In order to retrieve the correct features, we perform a general analysis of the stock data.
 
 **Stock Prediction**
 
@@ -56,6 +58,40 @@ To predict the outcome of the stock data (i.e. would an invest in the stock be p
 The last two questions are probably easiest to answer. Since all stocks have different values (i.e. different start prices of the stock and current statement values) and these values do not have an impact on our prediction (if a \\$10 stock rises to \\$200 this is a much better investment than a \\$1000 stocks rise to \\$1500). We will therefore adopt a normalization that takes the current stock price as a starting point and computes percental difference from there. This will provide a normalized scale across all stocks.
 
 For the smoothing we might use a time windows that is dependent on the length of the prediction (e.g. +/- 3 days for a quarter prediction and +/- 1 Week for a year prediction).
+
+The normalized stock data was computed based on 22 day sliding window applied to the historic stock prices of each available symbol.
+To analyze the target distributions, two parameters were modified (distance of days of the target value from the start price and size of the smoothing window).
+The distributions can be seen below. The graphs are fixed to a range of 5 to -5 and the bar-charts use a total of 100 bins. As stock data is only recorded for work-days, the length of the window are in work days (with 22 days resulting in a month and 66 days in a quarter).
+
+![Target distribution for 22 days ahead and 3 day smoothing window](./imgs/target-dist_22-3.png)
+![Target distribution for 66 days ahead and 3 day smoothing window](./imgs/target-dist_66-3.png)
+![Target distribution for 66 days ahead and 5 day smoothing window](./imgs/target-dist_66-5.png)
+![Target distribution for 132 days ahead and 5 day smoothing window](./imgs/target-dist_132-5.png)
+![Target distribution for 268 days ahead and 10 day smoothing window](./imgs/target-dist_268-10.png)
+![Target distribution for 528 days ahead and 10 day smoothing window](./imgs/target-dist_528-10.png)
+
+As one can see, the target values follow a normal distribution with growing variance over the look ahead length (as expected). Smoothing on the other hand appears to have negligible impact on the distributions.
+
+Based on these data, clipping areas for the training data of models prediction for different time horizons can be chosen.
+The normal distribution of the data also means an unequal balance of the training data for a classification approach (indicating that we might perform well using gaussian mixture models).
+
+TODO: split data in categories and perform a data correlation
+
+**Recommender System**
+
+For the recommender system, we will use data from company profiles to identify the similarity between stocks.
+There are a total of 15525 company profiles in the dataset collected for this task. The actual industries and sectors are distributed as follows:
+
+![Distribution of sectors][./imgs/comp-dist_sector.png]
+![Distribution of industry][./imgs/comp-dist_industry.png]
+![Distribution of exchange][./imgs/comp-dist_exchange.png]
+
+As the distributions show, there is a certain imbalance in the datasets. `Financial Services`, `Healthcare` and `Technology` (among a few others) are clearly over-represented in the data. Those trends re-appear in the industry section in finer granularity, with `Asset Management` by far the largest (followed by `banks` and `biotechnology`).
+This might cause a certain bias in the training of the recommender systems.
+
+Each company profile also has a description that can be used to detect similarities. To identify relevant clusters, I have extracted the Noun-Phrases from each description and transformed them into a vector set (i.e. Existence Vectorizer). I then performed t-SNE as dimensionality reduction to visualize the data in 2D. The points are colored according to their sector.
+
+![Clustering of Description][./imgs/comp-cluster_desc.png]
 
 ## ML Pipeline Design
 
@@ -88,4 +124,7 @@ From the engineering site, the web-app needs to be updated and the spark process
 ## Conclusion
 
 In this project, we have created a basic trading advisor for stock trading. It comprises a two step ML pipeline (prediction, recommendation) to advise potentially relevant stocks to the user.
+
+As with most machine learning pipelines, a large chunk of the work for this project was distributed to pre-processing of the data. Resulting in a large library of functions that provide a solid entry point for further experiments with stock related information system.
+
 The results show that the system can perform TODO.
