@@ -114,3 +114,25 @@ def create_stock_dataset(df, days_back, days_target, smooth_interval, value_col=
     df_norm = pd.concat(df_norm, axis=0)
 
     return df_norm
+
+def categorize_stock_data(df, xlim, num_cats=6, debug=True):
+    '''Performs categorization of the target values in the data.
+
+    Args:
+        df (DataFrame): DataFrame that contains the datapoints and a value of the target values
+        xlim (tuple): tuple of limit values for the min and max values
+        num_cats (int): Number of categories to apply (2 categories are outer)
+        debug (bool): Prints the category borders
+
+    Returns:
+        DataFrame with update `target` column that contains int categorical value
+    '''
+    # define boundaries of categories
+    d = (xlim[1] - xlim[0]) / (num_cats - 2)
+    cats = np.array([xlim[0] + (d*i) for i in range(0, num_cats - 1)])
+    if debug: print(cats)
+
+    # update the target column
+    df['target_cat'] = df['target'].clip(xlim[0], xlim[1]).apply(lambda x: num_cats - 1 if x == xlim[1] else np.where((cats >= x))[0][0])
+
+    return df

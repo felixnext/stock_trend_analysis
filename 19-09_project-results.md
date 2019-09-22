@@ -75,23 +75,46 @@ As one can see, the target values follow a normal distribution with growing vari
 Based on these data, clipping areas for the training data of models prediction for different time horizons can be chosen.
 The normal distribution of the data also means an unequal balance of the training data for a classification approach (indicating that we might perform well using gaussian mixture models).
 
-TODO: split data in categories and perform a data correlation
+To better understand the prediction power of historic data on future values, the category data was divided into 6 categories (based on the percentage of change from the current day value). Then the correlation of the historic data w.r.t. the categories was calculated.
+
+> The correlation for each day was calculated and averaged. In order to account for non-linear factors we use Spearman correlation.
+
+The following data is an excerpt from the correlations calculated on different datasets (more can be found in the `./imgs/` folder)
+
+![Correlation between Target-Categories with 66 days ahead and 7 days historic data](./imgs/target-dist_corr-7-66.png)
+![Correlation between Target-Categories with 132 days ahead and 7 days historic data](./imgs/target-dist_corr-7-132.png)
+![Correlation between Target-Categories with 132 days ahead and 14 days historic data](./imgs/target-dist_corr-14-132.png)
+![Correlation between Target-Categories with 264 days ahead and 14 days historic data](./imgs/target-dist_corr-14-264.png)
+![Correlation between Target-Categories with 528 days ahead and 14 days historic data](./imgs/target-dist_corr-14-528.png)
+![Correlation between Target-Categories with 528 days ahead and 21 days historic data](./imgs/target-dist_corr-21-528.png)
+
+> Note that the lower limit is capped before -1 as no stock descents to 0 (except in a bankruptcy, in which case the stock is not traded any more, so there are no datapoints for that case)
+
+The correlation matrixes show multiple things:
+
+* Longer time horizons of historic data slightly improve correlations between similar classes
+* Positive stocks seem to be more correlated in historic data
+* There is no clear diagonal structure (esp. stocks moving in negative direction have a low self-correlation)
+
+This could be an indicator that stock behavior (esp. over a longer time horizon) randomizes (or at least is not strongly dependent on previous performance). (A common piece of knowledge already advocated by many trading books).
+
+In order to improve the prediction power of the data w.r.t. the target categories, statement information was added to get a better understanding of the underlying fundamentals of a company. One would expect that this increases the correlation, as it provides information commonly used by big wall street traders (e.g. Benjamin Graham, Waren Buffet or Peter Lynch).
 
 **Recommender System**
 
 For the recommender system, we will use data from company profiles to identify the similarity between stocks.
 There are a total of 15525 company profiles in the dataset collected for this task. The actual industries and sectors are distributed as follows:
 
-![Distribution of sectors][./imgs/comp-dist_sector.png]
-![Distribution of industry][./imgs/comp-dist_industry.png]
-![Distribution of exchange][./imgs/comp-dist_exchange.png]
+![Distribution of sectors](./imgs/comp-dist_sector.png)
+![Distribution of industry](./imgs/comp-dist_industry.png)
+![Distribution of exchange](./imgs/comp-dist_exchange.png)
 
 As the distributions show, there is a certain imbalance in the datasets. `Financial Services`, `Healthcare` and `Technology` (among a few others) are clearly over-represented in the data. Those trends re-appear in the industry section in finer granularity, with `Asset Management` by far the largest (followed by `banks` and `biotechnology`).
 This might cause a certain bias in the training of the recommender systems.
 
 Each company profile also has a description that can be used to detect similarities. To identify relevant clusters, I have extracted the Noun-Phrases from each description and transformed them into a vector set (i.e. Existence Vectorizer). I then performed t-SNE as dimensionality reduction to visualize the data in 2D. The points are colored according to their sector.
 
-![Clustering of Description][./imgs/comp-cluster_desc.png]
+![Clustering of Description](./imgs/comp-cluster_desc.png)
 
 ## ML Pipeline Design
 
