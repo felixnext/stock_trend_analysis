@@ -15,7 +15,16 @@ class Statements():
   '''Base Class for retrieving statements about a public traded company.'''
 
   def merge_records(self, stocks, before=None, after=None):
-    '''Merges different statements into one dataframe.'''
+    '''Merges different statements into one dataframe.
+
+    Args:
+      stocks (list): List of stock symbols to load
+      before (date): Date before which the statements should be issued
+      after (date): Date after which the statements should be issued
+
+    Returns:
+      Merged DataFrame of all records
+    '''
     # iterate through all data
     dfs = []
     for stock in stocks:
@@ -81,7 +90,7 @@ class Statements():
     # check if date is there
     if 'year' not in df.columns or 'quarter' not in df.columns:
       df = self.add_quarter(df)
-      
+
     # convert and return
     return df[df['symbol'].isin(symbols)].pivot_table(index=['year', 'quarter'], columns='symbol', values=feat).sort_index(ascending=True)
 

@@ -114,7 +114,12 @@ This might cause a certain bias in the training of the recommender systems.
 
 Each company profile also has a description that can be used to detect similarities. To identify relevant clusters, I have extracted the Noun-Phrases from each description and transformed them into a vector set (i.e. Existence Vectorizer). I then performed t-SNE as dimensionality reduction to visualize the data in 2D. The points are colored according to their sector.
 
-![Clustering of Description](./imgs/comp-cluster_desc.png)
+Noun Phrase Clustering:
+
+![Clustering on Noun Phrase Vectors with PCA](./imgs/comp-desc_pca-sector.png)
+![Clustering on Noun Phrase Vectors with T-SNE](./imgs/comp-desc_tsne-sector.png)
+
+As we can see TODO
 
 ## ML Pipeline Design
 

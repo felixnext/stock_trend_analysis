@@ -22,8 +22,7 @@ class Cache():
     '''
     # safty check
     if type not in ['stock', 'etf', 'statement']:
-      raise ValueError("Given type is not recognized ({})".format(type))
-
+      raise ValueError("Unkown type ({})".format(type))
     # set folder
     fldr = 'Stocks' if type == 'stock' else 'ETFs'
     path = os.path.join(self.path, fldr, '*.txt')
@@ -91,3 +90,39 @@ class Cache():
 
     # combine and return
     return pd.concat(df_stocks, axis=0)
+
+  def load_statement_data(self, symbols, statement, limit=False, cache=True):
+    '''Loads merged statement information for all relevant symbols in the dataset.
+
+    Note: As the cache grows, this might require more memory
+
+    Args:
+      symbols (list): List of symbols to load
+      statement (Statement): Instance of statements to load online data
+      limit (bool): If true limit the output only to the given symbols
+      cache (bool): If true update the cache with the data that has to be loaded
+
+    Returns:
+      DataFrame containing the relevant statement informations
+    '''
+    # load the existing statement cache
+    df_state = pd.read_csv(os.path.join(self.path, 'statements.csv')).drop('Unnamed: 0', axis=1)
+
+    # find symbols that are not in list
+    missing = np.setdiff1d(symbols, df_state['symbol'].unique())
+
+    # load remaining data
+    df_missing = statement.merge_records(missing)
+
+    # merge data
+    df_state = pd.concat([df_state, df_missing], axis=0)
+
+    # check for storing
+    if cache == True:
+      df_state.to_csv(os.path.join(self.path, 'statements.csv'))
+
+    # filter to only relevant data
+    if limit == True:
+      df_state = df_state[df_state['symbol'].isin(symbols)]
+
+    return df_state

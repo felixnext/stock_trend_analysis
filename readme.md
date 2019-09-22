@@ -114,7 +114,7 @@ The system uses various sources of data. However, as financial apis appear incom
 
 ### Data Insights
 
-TODO
+A current report on the data insights is in [this markdown](19-09_project-results.md).
 
 ### ML Pipeline Design
 
