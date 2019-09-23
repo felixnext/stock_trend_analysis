@@ -112,6 +112,17 @@ There are a total of 15525 company profiles in the dataset collected for this ta
 As the distributions show, there is a certain imbalance in the datasets. `Financial Services`, `Healthcare` and `Technology` (among a few others) are clearly over-represented in the data. Those trends re-appear in the industry section in finer granularity, with `Asset Management` by far the largest (followed by `banks` and `biotechnology`).
 This might cause a certain bias in the training of the recommender systems.
 
+To get a better understanding of the cross-dependencies between these categorical variables, I performed a correlation test (based on pearson method, as we only have binary data per category):
+
+![Correlation between categories in sector and industry](./imgs/comp-conf_sector-industry.png)
+![Correlation between categories in exchange and sector](./imgs/comp-conf_sector-exchange.png)
+
+These correlation show us a certain overlap in some categories between sector and industry (e.g. Communication Services) and also some closely related field (e.g. Biotechnology and Healthcare). This basically explains the mapping between the distributions of sector and industry.
+We might want to try to only use one of these categorical variables as input for the system to avoid redundancy (and bias). Another option would be to weight the input features to avoid a double counting in the input features.
+
+The correlation between exchange and sector on the other hand only shows light preferences (e.g. Technology companies correlate weakly with Nasdaq). But overall the categories appear more distinct.
+
+
 Each company profile also has a description that can be used to detect similarities. To identify relevant clusters, I have extracted the Noun-Phrases from each description and transformed them into a vector set (i.e. Existence Vectorizer). I then performed t-SNE as dimensionality reduction to visualize the data in 2D. The points are colored according to their sector.
 
 Noun Phrase Clustering:
@@ -119,7 +130,14 @@ Noun Phrase Clustering:
 ![Clustering on Noun Phrase Vectors with PCA](./imgs/comp-desc_pca-sector.png)
 ![Clustering on Noun Phrase Vectors with T-SNE](./imgs/comp-desc_tsne-sector.png)
 
-As we can see TODO
+These clusters are pretty much meaningless, especially since we work with binary vectors, which have a statistical tendency to cluster into 4 directions (see PCA image).
+To get a better understanding of the semantic information embedded in the descriptions, I used GloVe embeddings and performed the same dimensionality reductions:
+
+
+![Clustering on Noun Phrase Vectors with PCA](./imgs/comp-desc_pca-glove-sector.png)
+![Clustering on Noun Phrase Vectors with T-SNE](./imgs/comp-desc_tsne-glove-sector.png)
+
+The embeddings (esp. the PCA) of the glove vectors show us certain clusters, which seem to correlate with sector information (even though the clusters have a high variance). This leads to the assumption, that these embeddings might provide additional useful information to identify relationships between stocks.
 
 ## ML Pipeline Design
 
