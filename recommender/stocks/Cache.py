@@ -5,6 +5,7 @@ import glob
 import pandas as pd
 import numpy as np
 from .AlphaVantageTicker import AlphaVantageTicker
+from recommender.contrib import fmp_api
 
 class Cache():
   '''Cache Function that stores stock and statement data on disk and loads it if required.
@@ -135,10 +136,43 @@ class Cache():
 
       # check for storing
       if cache == True:
-        df_state.to_csv(os.path.join(self.path, 'statements.csv'))
+        df_state.to_csv(file)
 
     # filter to only relevant data
     if limit == True:
       df_state = df_state[df_state['symbol'].isin(symbols)]
 
     return df_state
+
+  def load_profile_data(self, symbols=None, cache=True):
+    '''Loads relevant company profiles.
+
+    Args:
+      symbols (list): List of company symbols to load (if None load company profiles from FMP)
+      cache (bool): Defines if loaded data should be cached
+
+    Returns:
+      DataFrame with relevant company profiles
+    '''
+    # load the existing statement cache
+    file = os.path.join(self.path, 'profiles.csv')
+    if os.path.exists(file):
+      df_profiles = pd.read_csv(file).drop('Unnamed: 0', axis=1)
+    else:
+      df_profiles = None
+
+    # TODO: load missing data
+    if symbols is None:
+      symbols = fmp_api.profile.list_symbols()
+
+    # retrieve
+
+    # update the cache
+    if cache == True:
+      df_profiles.to_csv(file)
+
+    # filter to only relevant data
+    if limit == True:
+      df_profiles = df_profiles[df_profiles['symbol'].isin(symbols)]
+
+    return df_profiles

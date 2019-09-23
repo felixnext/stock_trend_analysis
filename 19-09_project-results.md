@@ -98,7 +98,26 @@ The correlation matrixes show multiple things:
 
 This could be an indicator that stock behavior (esp. over a longer time horizon) randomizes (or at least is not strongly dependent on previous performance). (A common piece of knowledge already advocated by many trading books).
 
-In order to improve the prediction power of the data w.r.t. the target categories, statement information was added to get a better understanding of the underlying fundamentals of a company. One would expect that this increases the correlation, as it provides information commonly used by big wall street traders (e.g. Benjamin Graham, Waren Buffet or Peter Lynch).
+In order to improve the prediction power of the data w.r.t. the target categories, statement information was added to get a better understanding of the underlying fundamentals of a company.
+One would expect that this increases the correlation, as it provides information commonly used by big wall street traders (e.g. Benjamin Graham, Warren Buffet or Peter Lynch).
+Specifically, the following indicators are used:
+
+* Revenue per Share Growth (for 3, 5 and 10 years)
+* Dividend per Share Growth (for 3, 5 and 10 years)
+* Research Expenses compared to net-cash position
+* Earnings per Share (EPS)
+* Dividend per Share
+* Price / Earnings Ratio (based on the current stock price)
+* Book-Value per Share (even though this can be misleading)
+* Research Growth
+* Debt Growth
+* Net-Cash per outstanding share
+
+All these indicators are relative (except maybe dividends and earnings, which are divided per share). This makes them easier to use in model training (absolute values would have a high variance).
+
+Looking at the correlations (this time the diagonal elements are not calculated in a separate way), we can generally see a lower correlation further away from the diagonal. This might indicate that these features are better suited to predict future stock prices than historic changes alone.
+
+TODO: correlations
 
 **Recommender System**
 

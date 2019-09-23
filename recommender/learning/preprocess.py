@@ -20,6 +20,8 @@ nltk.download('maxent_ne_chunker')
 nltk.download('words')
 nltk.download('omw')
 
+from recommender.stocks import AlphaVantageTicker, FMPStatements
+
 
 def normalize_stock_array(arr):
   '''Normalizes the given input array.'''
@@ -310,8 +312,12 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
 
   # reorder the dataframe
   #df = df.drop(['date_cor'], axis=1)
-  special_cols = ['target', 'target_cat', 'date_x', 'symbol']
-  cols = df.columns[df.columns.isin(special_cols) == False].tolist()
+  special_cols = ['target', 'target_cat', 'symbol']
+  if 'date' in df.columns:
+    special_cols.append('date')
+  else:
+    special_cols.append('date_x')
+  cols = df.columns[(df.columns.isin(special_cols) == False) & (df.columns.str.contains("date") == False)].tolist()
   df = df[cols + special_cols].rename(columns={'date_x': 'date'}).set_index('date')
 
   # drop temporary cols
@@ -322,3 +328,36 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
     df = df.replace([np.inf, -np.inf], np.nan).dropna(how='any', axis=0)
 
   return df
+
+def create_dataset(symbols, stocks, cache, back, ahead, xlim, num_cats=6, jump_size=21, smooth=5, sm=None, ti=None):
+  '''Creates a complete dataset.
+
+  Args:
+    symbols (list): List of symbol names to include in the dataset
+    stocks (dict): Dict with additional stock file mapping
+    cache (Cache): Instance of the cache to load the data
+    back (int): Number of days of historic stock data in the dataset
+    ahead (int): Number of days the target value lies in the future
+    xlim (tuple): Float Tuple of values to limit percentage (keep in mind, that a stock cannot fall below -1)
+    num_cats (int): Number of categories to generate
+    jump_size (int): Size of the jump in days between datapoints
+    smooth (int): Interval of smoothing days around the target value
+    sm (Statement): Instance of Statement to load data not in cache (if None use FMPStatements)
+    ti (Ticker): Instance of Ticker to load data not in cahce (if None use AlphaVantageTicker)
+
+  Returns:
+    Merged final dataset with training data points
+  '''
+  # load relevant statements
+  if sm is None: sm = FMPStatements()
+  df_state = cache.load_statement_data(symbols, sm, limit=True)
+
+  # load relevant stocks
+  if ti is None: ti = AlphaVantageTicker()
+  df_stocks = cache.load_stock_data(symbols, stocks, ti)
+
+  # preprocess the data
+  df_norm = create_stock_dataset(df_stocks, back, ahead, smooth, jump_size=jump_size)
+  df_stocks_cat = categorize_stock_data(df_norm, xlim=xlim, num_cats=num_cats)
+  df_state_norm = normalize_statement_data(df_state, impute=True)
+  return merge_stock_statement(df_stocks_cat, df_state_norm, col_price='target_price')
