@@ -1,5 +1,5 @@
 
-
+import numpy as np
 import pandas as pd
 from . import utils
 
@@ -21,7 +21,8 @@ def income(symbol, period='annual'):
   data = utils.fetch(url)
 
   # convert to datafraem
-  return pd.DataFrame(data['financials'])
+  df = pd.DataFrame(data['financials']).replace(r'^\s*$', np.nan, regex=True)
+  return utils.convert_dtype(df, 'float32', ['date'])
 
 def balance_sheet(symbol, period='annual'):
   '''Retrieves the relevant balance sheet statements for the given symbol
@@ -39,7 +40,8 @@ def balance_sheet(symbol, period='annual'):
   url = utils.build_url('financials/balance-sheet-statement', symbol, meta=meta)
   data = utils.fetch(url)
 
-  return pd.DataFrame(data['financials'])
+  df = pd.DataFrame(data['financials']).replace(r'^\s*$', np.nan, regex=True)
+  return utils.convert_dtype(df, 'float32', ['date'])
 
 def cash_flow(symbol, period='annual'):
   '''Retrieves the relevant cash-flow statements for the given symbol.
@@ -57,7 +59,8 @@ def cash_flow(symbol, period='annual'):
   url = utils.build_url('financials/cash-flow-statement', symbol, meta=meta)
   data = utils.fetch(url)
 
-  return pd.DataFrame(data['financials'])
+  df = pd.DataFrame(data['financials']).replace(r'^\s*$', np.nan, regex=True)
+  return utils.convert_dtype(df, 'float32', ['date'])
 
 def growth(symbol, period='annual'):
   '''Retrieves the growth statements for the given symbol.
@@ -87,5 +90,5 @@ def growth(symbol, period='annual'):
           else:
               items[key] = [rat[key]]
 
-  return pd.DataFrame(items).assign(date=dates)
-  
+  df = pd.DataFrame(items).assign(date=dates).replace(r'^\s*$', np.nan, regex=True)
+  return utils.convert_dtype(df, 'float32', ['date'])

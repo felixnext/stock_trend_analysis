@@ -93,7 +93,7 @@ def create_stock_dataset(df, days_back, days_target, smooth_interval, value_col=
 
     # calculate window size and the column names
     win = days_back + days_target + (smooth_interval if smooth_interval is not None else 0)
-    cols = ["day_{}".format(i+1) for i in range(days_back)] + ["norm_value", "target"]
+    cols = ["day_{}".format(i+1) for i in range(days_back)] + ["target_price", "target"]
 
     # order symbol-df for time and perform sliding window
     df_symbol = df['symbol'].str.lower()
@@ -220,3 +220,105 @@ def create_profile_dataset(df, embedding='glove'):
   df_final = pd.concat([df[['symbol']], df_sector_dummy, df_industry_dummy, df_exchange_dummy, embs], axis=1).set_index('symbol')
 
   return df_final
+
+def normalize_statement_data(df, impute=False, impute_method='linear'):
+  '''Normamlizes the given reports and extracts relevant statement data.
+
+  Args:
+    df (DataFrame): DataFrame with merged statement informations for each company
+    impute (bool): Defines if missing values should be imputed to create a stable dataset
+    impute_method (str): Defines the method for imputing (options: 'linear', 'pad')
+
+  Returns:
+    DataFrame with chained data
+  '''
+  # check if index is not date already
+  if df.index.name == 'date':
+    df = df.reset_index()
+  if 'date' in df.columns:
+    if str(df['date'].dtype) == 'object':
+      df['date'] = df['date'].astype('str').apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
+    df = df.set_index('date')
+
+  # impute data (note: data should only be imputed per symbol and in a forward fashion)
+  if impute == True:
+    df = df.reset_index().groupby('symbol').apply(lambda x: x.interpolate(method=impute_method)).set_index('date')
+
+  # calculate some additional statements
+  df['cash_overall_position'] = df['cash'] + df['marketable_securities']
+  df['cash_net'] = df['cash_overall_position'] - df['debt_longterm']
+  df['expenses_research_netcash'] = np.divide(df['expenses_research'], df['cash_net'])
+
+  # list of relevant positions
+  name_map = [
+    'cash_net',
+    'eps_diluted',
+    'dividend_share',
+    'revenue_growth',
+    'cash_marketcap_ratio',
+    'expenses_research_netcash',
+    'shareholder_equity',
+    'debt_growth',
+    'eps_growth',
+    'research_growth',
+    'bookvalue_share_growth',
+    'dividend_share_growth',
+    'dividend_share_growth_3y',
+    'dividend_share_growth_5y',
+    'dividend_share_growth_10y',
+    'revenue_share_growth_3y',
+    'revenue_share_growth_5y',
+    'revenue_share_growth_10y'
+  ]
+  symbol = df['symbol']
+  df = df.loc[:, name_map].astype('float32')
+  df['symbol'] = symbol
+
+  return df
+
+def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True):
+  '''Merges the given stock and statement data
+
+  Args:
+    df_stocks (DataFrame):
+    df_stmnts (DataFrame):
+    col_price (str): Name of the column in `df_stocks` that holds the price
+    clean_na (bool): Defines if columns with any NaN values should be cleared
+
+  Returns:
+    Merged dataframe
+  '''
+  # find the historic length of data
+  days_back = df_stocks.columns.str.contains('day_').sum()
+
+  # make sure symbols are upper case
+  df_stocks['symbol'] = df_stocks['symbol'].str.upper()
+  df_stmnts['symbol'] = df_stmnts['symbol'].str.upper()
+
+  # merge data (note: use values at the end - as pandas matches index otherwise...)
+  df_stocks['date_cor'] = (df_stocks.reset_index()['date'] + pd.DateOffset(days_back)).values
+  df = pd.merge_asof(
+      df_stocks.reset_index().sort_values(by=['date_cor', 'symbol']),
+      df_stmnts.reset_index().sort_values(by=['date', 'symbol']),
+      left_on='date_cor', right_on='date', by='symbol',
+      tolerance=pd.Timedelta('365 day'), direction='backward'
+  )
+
+  # calculate the pe_ratio
+  df['pe_ratio'] = np.divide(df[col_price], df['eps_diluted'])
+  df['cash_share'] = np.divide(df['cash_net'], np.divide(df['shareholder_equity'], df[col_price]))
+
+  # reorder the dataframe
+  #df = df.drop(['date_cor'], axis=1)
+  special_cols = ['target', 'target_cat', 'date_x', 'symbol']
+  cols = df.columns[df.columns.isin(special_cols) == False].tolist()
+  df = df[cols + special_cols].rename(columns={'date_x': 'date'}).set_index('date')
+
+  # drop temporary cols
+  df = df.drop(['shareholder_equity', 'cash_net'], axis=1)
+
+  # clear data
+  if clean_na == True:
+    df = df.replace([np.inf, -np.inf], np.nan).dropna(how='any', axis=0)
+
+  return df

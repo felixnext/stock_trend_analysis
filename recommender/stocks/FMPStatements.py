@@ -41,6 +41,8 @@ class FMPStatements(Statements):
 
     # convert data
     name_map = {
+      'Cash and cash equivalents': 'cash',
+      'Short-term investments': 'marketable_securities',
       'Total debt': 'debt_total',
       'Short-term debt': 'debt_shortterm',
       'Long-term debt': 'debt_longterm',
@@ -54,6 +56,7 @@ class FMPStatements(Statements):
       'Deferred revenue': 'revenue_deffered',
       'Investments': 'investments',
       'Inventories': 'inventory',
+      'Total shareholders equity': 'shareholder_equity'
     }
     type_map = {}
     df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
@@ -104,8 +107,35 @@ class FMPStatements(Statements):
       'Operating Income': 'income_operating',
       'Dividend per Share': 'dividend_share',
       'Revenue': 'revenue',
-      'Revenue Growth': 'revenue_growth'
+      'Revenue Growth': 'revenue_growth',
     }
+    df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
+
+    return df
+
+  def growth(self, symbol, before=None, after=None, period=None):
+    period = self.period if period is None else period
+    # retrieve the relevant data
+    df = fmp_api.statements.growth(symbol, period=period)
+    df = self._filter(df, before, after)
+
+    # convert the relevant data
+    name_map = {
+      'Debt Growth': 'debt_growth',
+      'R&D Expense Growth': 'research_growth',
+      'Book Value per Share Growth': 'bookvalue_share_growth',
+      'EPS Growth': 'eps_growth',
+      'Dividends per Share Growth': 'dividend_share_growth'
+    }
+    if period == 'annual':
+      name_map.update( {
+        '10Y Dividend per Share Growth (per Share)': 'dividend_share_growth_10y',
+        '5Y Dividend per Share Growth (per Share)': 'dividend_share_growth_5y',
+        '3Y Dividend per Share Growth (per Share)': 'dividend_share_growth_3y',
+        '10Y Revenue Growth (per Share)': 'revenue_share_growth_10y',
+        '5Y Revenue Growth (per Share)': 'revenue_share_growth_5y',
+        '3Y Revenue Growth (per Share)': 'revenue_share_growth_3y',
+      } )
     df = df.rename(columns=name_map).loc[:, list(name_map.values())].astype('float32')
 
     return df

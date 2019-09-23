@@ -44,3 +44,18 @@ def fetch(url, type='get', body=None):
 
   # execute command
   return res.json()
+
+def convert_dtype(df, dtype, non_cols=None):
+  '''Converts the dtype except the given columns.
+
+  Args:
+    df (DataFrame): DataFrame to convert
+    dtype (str): Name of the dtype to convert to
+    non_cols (list): List of columns that should not be converted
+
+  Returns:
+    Converted DataFrame
+  '''
+  if non_cols is None:
+    return df.astype(dtype)
+  return pd.concat([df[non_cols], df.drop(non_cols, axis=1).astype(dtype)], axis=1)

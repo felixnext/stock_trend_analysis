@@ -3,6 +3,7 @@
 import os, warnings
 import glob
 import pandas as pd
+import numpy as np
 from .AlphaVantageTicker import AlphaVantageTicker
 
 class Cache():
@@ -107,20 +108,30 @@ class Cache():
       DataFrame containing the relevant statement informations
     '''
     # load the existing statement cache
-    df_state = pd.read_csv(os.path.join(self.path, 'statements.csv')).drop('Unnamed: 0', axis=1)
+    file = os.path.join(self.path, 'statements.csv')
+    if os.path.exists(file):
+      df_state = pd.read_csv(file).drop('Unnamed: 0', axis=1)
+    else:
+      df_state = None
 
     # check if additional data should be loaded
     if statement is None and load_missing == True:
       warnings.warn("No statement instance given, no additional data can be loaded! Set `load_missing` to False or pass an instance to silence this warning.")
     if statement is not None or load_missing == True:
       # find symbols that are not in list
-      missing = np.setdiff1d(symbols, df_state['symbol'].unique())
+      if df_state is None:
+        missing = symbols
+      else:
+        missing = np.setdiff1d(symbols, df_state['symbol'].unique())
 
       # load remaining data
       df_missing = statement.merge_records(missing)
 
       # merge data
-      df_state = pd.concat([df_state, df_missing], axis=0)
+      if df_state is None:
+        df_state = df_missing
+      elif df_missing.empty == False:
+        df_state = pd.concat([df_state, df_missing], axis=0)
 
       # check for storing
       if cache == True:
