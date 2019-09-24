@@ -90,6 +90,8 @@ The following data is an excerpt from the correlations calculated on different d
 
 > Note that the lower limit is capped before -1 as no stock descents to 0 (except in a bankruptcy, in which case the stock is not traded any more, so there are no datapoints for that case)
 
+> There is also a special case for diagonal values in which case we use the `corr` function to calculate a self-correlation as compared to the `corrwith` function used by remaining items. Both elements will use `spearman-correlation`
+
 The correlation matrixes show multiple things:
 
 * Longer time horizons of historic data slightly improve correlations between similar classes
@@ -117,7 +119,13 @@ All these indicators are relative (except maybe dividends and earnings, which ar
 
 Looking at the correlations (this time the diagonal elements are not calculated in a separate way), we can generally see a lower correlation further away from the diagonal. This might indicate that these features are better suited to predict future stock prices than historic changes alone.
 
-TODO: correlations
+![Correlation between Target-Categories with 132 days ahead and 14 days historic data based on debt growth](./imgs/target-dist_debt-growth-corr-14-132.png)
+![Correlation between Target-Categories with 264 days ahead and 7 days historic data based on dividend growth](./imgs/target-dist_dividends-corr-7-264.png)
+![Correlation between Target-Categories with 66 days ahead and 7 days historic data based on revenue growth](./imgs/target-dist_revenue-corr-7-66.png)
+![Correlation between Target-Categories with 132 days ahead and 7 days historic data based on revenue growth](./imgs/target-dist_revenue-corr-7-132.png)
+
+Since the statement features are (at least partially) independent, the correlations look at them individually and not as an average (as is the case for the historic stock data). We can see that certain features (like revenue, debt and dividends) appear to show better correlations with the data, so they will hopefully improve prediction results.
+As before, the data for diagonal items are divided into two distinct sets to calculate the correlation. The 0 values on the diagonal are curious, especially since the variance of the distinct sets is not 0.
 
 **Recommender System**
 
@@ -160,16 +168,66 @@ The embeddings (esp. the PCA) of the glove vectors show us certain clusters, whi
 
 ## ML Pipeline Design
 
-**Stock Prediction**
+### Stock Prediction
 
-* Trained as classifier
-* Trained as regression
+In order to know if a stock is relevant for investment we do not want to predict the exact prices, but rather identify if the stock is moving in a certain direction.
+Therefore I have split the stocks into categories of movement dependent on the current price (see `Data Analysis` section). Using this data, we can either use a classification approach (i.e. classify each of the movement categories) or use regression.
+Since the categories have a semantic distance to each other, we can simply use normalize the target value and perform a regression approach.
 
-**Recommender**
+**Classification**
+
+Our baseline for the classification approach will be a multi-output logistic regression. The table below shows the remaining models used.
+I assume that most of the models require no further explanation for a technical audience (otherwise, please see regarding articles in the [sklearn documentation](https://scikit-learn.org/stable/documentation.html)).
+One exception is the neural network architecture used, which is build as a custom network based on keras (i.e. TensorFlow). I trained two types of networks.
+A simple network using only four densely connected layers (128, 256, 128, 5) to capture the output as a softmax. And a more complex architecture that uses a stem block (64, 64, 128) as well as Batch-Normalization and Dropouts (to increase generalization). I also used a longer training for this network (200 eps compared to 100). Both networks use the adam optimizer.
+
+> It is also worth noting that the problem is apparently quite non-linear, leading to non-convergence warnings in the Logistic Regression approach.
+
+
+| **Model** | F1 Score | Precision | Recall |
+| --------- | -------- | --------- | ------ |
+| Logistic Regression (Baseline) | 0.27 | 0.5 | 0.18 |
+| Gaussian Mixture Models |
+| Support Vector Machines | .41 | .54 | .33 |
+| Neural Network (Simple) | .48 | .48 | .48 |
+| Neural Network (Complex) |
+
+> Note: During experiments I found that standard scaled data also provides benefits for neural network architectures.
+
+
+Please note that I did not perform GridSearch for any of the models, though that might be part of future work (together with the analysis of additional input features, such as news-sentiments).
+Overall we can see that the approaches perform better than random (given 6 classes), with a biases towards class representations in the training data (see regarding notebook output for details).
+Nevertheless, the results show a good prediction power for the X approach.
+
+**Regression**
+
+The baseline for regression model would be a linear regression model (based only on the stock information). I would no good results due to the non-linear nature of stock movements under certain conditions, but it may suite as a general indicator.
+
+
+| **Model** | F1 Score | Precision | Recall |
+| --------- | -------- | --------- | ------ |
+| Logistic Regression (Baseline) | 0.1 | 0.3 | 0.4 |
+| Gaussian Mixture Models |
+| Support Vector Machines |
+| Neural Network |
+
+### Recommender
 
 Since we have no ground-truth data for the similarity between stocks (e.g. a dataset with user-investments), the measuring of the absolute quality of the results is difficult.
 
 ## Results
+
+**Stock Prediction**
+
+From the results of the experiments and subjective test sampling, I decided to use X models (specificially the X model) for the final system, as it provided the best results.
+
+**Recommender**
+
+TODO
+
+**Overall**
+
+Overall the system allows to provide a
 
 > The results are currently available through a Streamlit Report (in the `notebooks` folder). The web-app is currently not functional, but I am planning on developing it in the near future.
 
@@ -182,6 +240,7 @@ This would require broader pre-processing pipeline (including NER and mapping ne
 Such a dataset could be useful to extract further higher order features (e.g. sentiments) to identify psychological trends in the market.
 
 Another way to improve the system would be the usage of more complex prediction methods (e.g. more advanced RNN approaches) or the use of online learning (e.g. through reinforcement learning) to adjust the trading strategy to the user needs.
+Apart from more complex models, there are also biases in the data that should be addressed (e.g. high number of stocks in middle categories).
 
 From the engineering site, the web-app needs to be updated and the spark process could be streamlined.
 

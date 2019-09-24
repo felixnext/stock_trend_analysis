@@ -95,7 +95,7 @@ def create_stock_dataset(df, days_back, days_target, smooth_interval, value_col=
 
     # calculate window size and the column names
     win = days_back + days_target + (smooth_interval if smooth_interval is not None else 0)
-    cols = ["day_{}".format(i+1) for i in range(days_back)] + ["target_price", "target"]
+    cols = ["day_{}".format(i+1) for i in range(days_back)] + ["norm_price", "target"]
 
     # order symbol-df for time and perform sliding window
     df_symbol = df['symbol'].str.lower()
@@ -278,7 +278,7 @@ def normalize_statement_data(df, impute=False, impute_method='linear'):
 
   return df
 
-def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True):
+def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True, drop_last_day=True):
   '''Merges the given stock and statement data
 
   Args:
@@ -286,9 +286,10 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
     df_stmnts (DataFrame):
     col_price (str): Name of the column in `df_stocks` that holds the price
     clean_na (bool): Defines if columns with any NaN values should be cleared
+    drop_last_day (bool): Defines if the column with the last day information should be dropped (as it is 0)
 
   Returns:
-    Merged dataframe
+    Merged dataframe that has 4 special columns at then end (norm_price, target, target_cat, symbol) and date as index. Remaining cols are features.
   '''
   # find the historic length of data
   days_back = df_stocks.columns.str.contains('day_').sum()
@@ -312,7 +313,7 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
 
   # reorder the dataframe
   #df = df.drop(['date_cor'], axis=1)
-  special_cols = ['target', 'target_cat', 'symbol']
+  special_cols = ['norm_price', 'target', 'target_cat', 'symbol']
   if 'date' in df.columns:
     special_cols.append('date')
   else:
@@ -322,6 +323,8 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
 
   # drop temporary cols
   df = df.drop(['shareholder_equity', 'cash_net'], axis=1)
+  if drop_last_day:
+    df = df.drop(['day_{}'.format(int(days_back))], axis=1)
 
   # clear data
   if clean_na == True:
@@ -360,4 +363,4 @@ def create_dataset(symbols, stocks, cache, back, ahead, xlim, num_cats=6, jump_s
   df_norm = create_stock_dataset(df_stocks, back, ahead, smooth, jump_size=jump_size)
   df_stocks_cat = categorize_stock_data(df_norm, xlim=xlim, num_cats=num_cats)
   df_state_norm = normalize_statement_data(df_state, impute=True)
-  return merge_stock_statement(df_stocks_cat, df_state_norm, col_price='target_price')
+  return merge_stock_statement(df_stocks_cat, df_state_norm, col_price='norm_price')

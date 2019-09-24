@@ -48,6 +48,10 @@ $ python run.py
 
 The service should now be available under `http://localhost:3001/`
 
+## Code documentation
+
+You can find the documentation of the `recommender` library [here](recommender.md)
+
 ## Architecture
 
 The goal of the system should be to provide recommendations of stocks for a specific user. Therefore the system should leverage the following information:
