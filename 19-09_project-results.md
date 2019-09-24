@@ -16,6 +16,8 @@ Due to timely constraints for this project the overall goal is narrowed down to:
 * Use this stock data to predict the profitability of a stock on multiple time-scales
 * Combine both features to compute a similarity between stocks and provide recommendations to the user based on input keywords and stock ranking
 
+My desired outcome for the project is to have starting point for future experiments that provides data pre-processing and a set of baseline models that can be extended and enriched with additional data sources.
+
 ## Related Work & Libraries
 
 There are several other projects and libraries that are working on similar goals. Most tasks are focused on stock price prediction.
@@ -225,11 +227,7 @@ From the results of the experiments and subjective test sampling, I decided to u
 
 **Recommender**
 
-TODO
-
-**Overall**
-
-Overall the system allows to provide a
+From subjective testing, we can see that the results from the recommender are roughly aligned with the user-queries in most cases (there are edge cases, where no words in the GloVe dictionary are found and random vectors are used). Up-filling of the results with similarity matches also shows decent results, given that the categorical variables do not necessarily carry much semantics w.r.t. the users information need.
 
 > The results are currently available through a Streamlit Report (in the `notebooks` folder). The web-app is currently not functional, but I am planning on developing it in the near future.
 

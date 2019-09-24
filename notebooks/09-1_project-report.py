@@ -61,6 +61,9 @@ data = load_data()
 cosine_threshold = .92
 sim_threshold = .65
 max_stocks = 50
+max_enlarged = 10
+# model params
+model_back = 7
 
 # -- General Information --
 
@@ -73,9 +76,9 @@ st.bar_chart(dist)
 
 if st.checkbox('show relevant news'):
   st.write("Current stock market news:")
-  feed = rcmd.news.FPNewsFeed('https://www.ft.com/business-education?format=rss', col_map={'link': 'article_link', 'summary': 'summary', 'title': 'headline', 'published': 'date'}, filter=True)
+  feed = rcmd.news.FPNewsFeed('https://www.ft.com/business-education?format=rss', col_map={'link': 'link', 'summary': 'summary', 'title': 'headline', 'published': 'date'}, filter=True)
   news = feed.news()[1]
-  st.text(news)
+  st.text(news[['headline', 'date', 'summary', 'link']].set_index('date'))
 
 # -- Stock Selection --
 
@@ -119,16 +122,42 @@ for symbol in symbols:
 
 # combine with relevant profile data
 df_res = pd.DataFrame({'symbol': res_symbols, 'ranking': res_rankings})
-df_res = pd.merge(df_res, data['profiles'], on='symbol').sort_values(by='ranking', ascending=False)
+#df_res = pd.merge(df_res, data['profiles'], on='symbol').sort_values(by='ranking', ascending=False)
 
 st.write("Found {} very relevant and {} relevant stocks for you!".format(len(symbols), len(df_res) - len(symbols)))
+
+# load relevant stocks
 load_text = st.write("Loading current stock data 🌍...")
+cache = rcmd.stocks.Cache()
+df_stocks = cache.load_stock_data(res_symbols, ticker=data['ticker'], cache=False, load_data=False)
+df_state = cache.load_statement_data(res_symbols, data['statement'], limit=True, cache=False, load_data=False)
 
-# TODO: retrieve current data for most relevant stock
-load_text.write("Prediction future prices 🌎...")
+# preprocess input data
+load_text.write("Pre-Processing the data 🌎...")
+df_input = rcmd.learning.preprocess.create_input(df_stocks, df_state, model_back)
 
-# TODO: load data for all stocks and predict ranking
-load_text.write("Completing the ranking 🌏...")
+# use model to predict future prices (note: have to ensure the correct order of the input variables)
+load_text.write("Predicting future prices 🌏...")
+df_input_adj = df_input.drop(['symbol'])
+df_pred = model.predict(df_input_adj.to_numpy())
+df_pred = pd.DataFrame(df_pred, columns=['pred'])
+# merge relevant data
+results = pd.concat([df_input['symbol'], df_pred], axis=1)
+results = pd.merge(df_res, results, on='symbol').sort_values(by="ranking", ascending=False)
 
-# TODO: show the results
+# combine all results
 load_text.write("Results:")
+
+# iterate through enlarged stocks
+for symbol in results.iloc[:max_enlarge, 'symbol'].unique():
+  st.write("**Stock - {}:**".format(symbol))
+  res = results[results['symbol'] == symbol]
+  st.write('  Score: {} - Prediction: {}'.format(res['ranking'].iloc[0], res['pred'].iloc[0]))
+  stock = df_stocks[df_stocks['symbol'] == symbol].set_index('date').sort_index(ascending=True)
+  st.line_chart(stock['close'])
+  # TODO: might show statement data
+
+# display remaining as dataframe
+if results.shape[0] > max_enlarge:
+  st.write("Remaining:")
+  st.text(results.iloc[max_enlarge:])

@@ -223,12 +223,13 @@ def create_profile_dataset(df, embedding='glove'):
 
   return df_final
 
-def normalize_statement_data(df, impute=False, impute_method='linear'):
+def normalize_statement_data(df, impute=False, impute_heavy=False, impute_method='linear'):
   '''Normamlizes the given reports and extracts relevant statement data.
 
   Args:
     df (DataFrame): DataFrame with merged statement informations for each company
     impute (bool): Defines if missing values should be imputed to create a stable dataset
+    impute_heavy (bool): Defines if forward imputing should also be used to avoid NaN values
     impute_method (str): Defines the method for imputing (options: 'linear', 'pad')
 
   Returns:
@@ -245,6 +246,9 @@ def normalize_statement_data(df, impute=False, impute_method='linear'):
   # impute data (note: data should only be imputed per symbol and in a forward fashion)
   if impute == True:
     df = df.reset_index().groupby('symbol').apply(lambda x: x.interpolate(method=impute_method)).set_index('date')
+  if impute_heavy == True:
+    df = df.reset_index().groupby('symbol').apply(lambda x: x.fillna(method='bfill')).set_index('date')
+
 
   # calculate some additional statements
   df['cash_overall_position'] = df['cash'] + df['marketable_securities']
@@ -313,11 +317,10 @@ def merge_stock_statement(df_stocks, df_stmnts, col_price='price', clean_na=True
 
   # reorder the dataframe
   #df = df.drop(['date_cor'], axis=1)
-  special_cols = ['norm_price', 'target', 'target_cat', 'symbol']
-  if 'date' in df.columns:
-    special_cols.append('date')
-  else:
-    special_cols.append('date_x')
+  special_cols = []
+  for col in ['norm_price', 'target', 'target_cat', 'symbol', 'date', 'date_x']:
+    if col in df.columns:
+      special_cols.append(col)
   cols = df.columns[(df.columns.isin(special_cols) == False) & (df.columns.str.contains("date") == False)].tolist()
   df = df[cols + special_cols].rename(columns={'date_x': 'date'}).set_index('date')
 
@@ -364,3 +367,56 @@ def create_dataset(symbols, stocks, cache, back, ahead, xlim, num_cats=6, jump_s
   df_stocks_cat = categorize_stock_data(df_norm, xlim=xlim, num_cats=num_cats)
   df_state_norm = normalize_statement_data(df_state, impute=True)
   return merge_stock_statement(df_stocks_cat, df_state_norm, col_price='norm_price')
+
+def create_input(df_stocks, df_state, back, value_col='close'):
+  '''Creates an input datapoint for each given symbol.
+
+  Args:
+    df_stocks (DataFrame): List of stock data (already loaded) that should be used
+    df_state (DataFrame): List of statement data that should be used
+    num_cats (int): Number of categories for the data
+    back (int): Days of historic data to use
+    value_col (str): Column that contains the relevant price information
+
+  Returns:
+    Dataframe with one datapoint per symbol to be inputed into a prediction model
+  '''
+  # create statement data
+  df_state_norm = normalize_statement_data(df_state, impute=True, impute_heavy=True)
+
+  # setup stocks data
+  if df_stocks['date'].dtype == 'object':
+      df_stocks['date'] = df_stocks['date'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
+
+  # iterate through all symbols in stock data and find relevant items
+  symbols = df_stocks['symbol'].unique()
+  df_norm = []
+  for symbol in symbols:
+    # retrieve partial df
+    df_sym = df_stocks[df_stocks['symbol'] == symbol].sort_values(by='date', ascending=False).set_index('date')[[value_col]]
+    # note: use copy to ensure memory safty for as_strided function
+    df_arr = np.copy(df_sym.to_numpy())
+
+    # sliding window (Note: pandas does not write a new array to disk, but references the old one, as long as no values are modified)
+    st = df_arr.strides   # number of bytes for as_stride to jump
+    # note: as_strided works directly on memory blocks and might crash the program
+    wnds = as_strided(df_arr, (1, back), (st[0] * 1, st[1] * 1), writeable=False)
+
+    # normalize the one window
+    df_res = np.apply_along_axis(lambda wnd: normalize_stock_array(wnd[::-1]), axis=1, arr=wnds)
+    df_res = pd.DataFrame(df_res)
+    df_res.columns = ["day_{}".format(i+1) for i in range(back)]
+    df_res.index = df_sym.index[:-(back-1)][0:1]
+    df_res['symbol'] = symbol
+    df_res['norm_price'] = wnds[0][0]
+
+    df_norm.append(df_res)
+
+  # combine data
+  df_norm = pd.concat(df_norm, axis=0)
+
+  # combine datasets
+  df_res = merge_stock_statement(df_norm, df_state_norm, col_price='norm_price', clean_na=False)
+  # cleanup dataframe
+  df_res = df_res.fillna(0)
+  return df_res

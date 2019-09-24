@@ -48,13 +48,14 @@ class Cache():
     '''
     pass
 
-  def load_stock_data(self, symbols, stocks=None, ticker=None, cache=True):
+  def load_stock_data(self, symbols, stocks=None, ticker=None, cache=True, load_data=True):
     '''Loads a dataframe with the given stock data.
 
     Args:
         symbols (list): List of symbol names to load
         stocks (dict): Stock name dictionary (if None, load with default vals)
         cache (bool): Defines if not found data that is loaded from API should be cached for later use (default=True)
+        load_data (bool): Defines if data should be loaded from cache
 
     Returns:
         DataFrame in default stock format with additional symbol column
@@ -67,7 +68,7 @@ class Cache():
     df_stocks = []
     for symbol in symbols:
         # load stock data
-        if symbol in stocks:
+        if symbol in stocks and load_data:
             try:
                 df_stock = pd.read_csv(stocks[symbol])
             except:
@@ -93,7 +94,7 @@ class Cache():
     # combine and return
     return pd.concat(df_stocks, axis=0)
 
-  def load_statement_data(self, symbols, statement, limit=False, cache=True, load_missing=True):
+  def load_statement_data(self, symbols, statement, limit=False, cache=True, load_missing=True, load_data=True):
     '''Loads merged statement information for all relevant symbols in the dataset.
 
     Note: As the cache grows, this might require more memory
@@ -104,13 +105,14 @@ class Cache():
       limit (bool): If true limit the output only to the given symbols
       cache (bool): If true update the cache with the data that has to be loaded
       load_missing (bool): Defines if data missing from the cache should be loaded through the API
+      load_data (bool): Defines if data should be loaded from cache
 
     Returns:
       DataFrame containing the relevant statement informations
     '''
     # load the existing statement cache
     file = os.path.join(self.path, 'statements.csv')
-    if os.path.exists(file):
+    if os.path.exists(file) and load_data == True:
       df_state = pd.read_csv(file).drop('Unnamed: 0', axis=1)
     else:
       df_state = None
@@ -118,7 +120,7 @@ class Cache():
     # check if additional data should be loaded
     if statement is None and load_missing == True:
       warnings.warn("No statement instance given, no additional data can be loaded! Set `load_missing` to False or pass an instance to silence this warning.")
-    if statement is not None or load_missing == True:
+    if statement is not None and load_missing == True:
       # find symbols that are not in list
       if df_state is None:
         missing = symbols

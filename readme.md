@@ -26,6 +26,8 @@ $ cd notebooks
 $ streamlit run 09-1_project-report.py
 ```
 
+> Note: As no data is provided in this repo, the first start might take a few minutes to download the relevant profile data from the API
+
 ![Example Video](./imgs/streamlit.gif)
 
 > Note: The web-app is currently not functional, but will come soon.
