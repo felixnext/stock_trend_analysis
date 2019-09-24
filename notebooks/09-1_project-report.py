@@ -42,20 +42,21 @@ def load_data():
   df_exchange_dummy = pd.get_dummies(df_profile['exchange'], dummy_na=True, prefix='exchange')
   df_cats = pd.concat([df_profile[['symbol']], df_sector_dummy, df_industry_dummy, df_exchange_dummy], axis=1)
 
-  tf = skr.transformer.SimilarityTransformer(cols=(1, None), index_col='symbol', normalize=True)
-  df_sim = tf.transform(df_cats)
+  simtf = skr.transformer.SimilarityTransformer(cols=(1, None), index_col='symbol', normalize=True)
+  df_sim = simtf.transform(df_cats)
 
-  # load the pre-trained model
-  model = tf.keras.models.load_model('../data/keras-model.h5')
+  #return {'model': model, 'ticker': ticker, 'statement': statement, 'profiles': df_profile, 'embs': df_embs, 'cats': df_cats, 'similarity': df_sim, 'glove': gt}
+  return df_profile, df_embs, df_cats, df_sim, gt
 
-  # create api access for live data loading
-  ticker = rcmd.stocks.AlphaVantageTicker()
-  statement = rcmd.stocks.FMPStatements()
-
-  return {'model': model, 'ticker': ticker, 'statement': statement, 'profiles': df_profile, 'embs': df_embs, 'cats': df_cats, 'similarity': df_sim, 'glove': gt}
-
+load_mods = st.text("Loading models...")
 # actually load the data
-data = load_data()
+model = tf.keras.models.load_model('../data/keras-model.h5')
+# create api access for live data loading
+ticker = rcmd.stocks.AlphaVantageTicker()
+statement = rcmd.stocks.FMPStatements()
+# load hashed data
+df_profile, df_embs, df_cats, df_sim, gt = load_data()
+load_mods.text("Loaded models.")
 
 # some settings
 cosine_threshold = .92
@@ -63,7 +64,7 @@ sim_threshold = .65
 max_stocks = 50
 max_enlarged = 10
 # model params
-model_back = 7
+model_back = 14
 
 # -- General Information --
 
@@ -71,14 +72,14 @@ st.subheader("General Information:")
 
 st.write("The system contains a total of {} stock informations.".format(len(df_cats)))
 st.write('Distribution of sectors:')
-dist = data['profiles'].groupby('sector').count()['price']
+dist = df_profile.groupby('sector').count()['price']
 st.bar_chart(dist)
 
 if st.checkbox('show relevant news'):
   st.write("Current stock market news:")
   feed = rcmd.news.FPNewsFeed('https://www.ft.com/business-education?format=rss', col_map={'link': 'link', 'summary': 'summary', 'title': 'headline', 'published': 'date'}, filter=True)
   news = feed.news()[1]
-  st.text(news[['headline', 'date', 'summary', 'link']].set_index('date'))
+  st.dataframe(news[['headline', 'date', 'summary', 'link']].set_index('date'))
 
 # -- Stock Selection --
 
@@ -96,68 +97,73 @@ if len(query) < 3:
 else:
   st.write('Results for "{}":'.format(query))
 
-# first step: filter relevant data
-query_emb = data['glove'].transform([query])
-# rank each stock according to cosine similarity
-rank = cosine_similarity(data['embs'], query_emb)
+  # first step: filter relevant data
+  query_emb = gt.transform([query])
+  # rank each stock according to cosine similarity
+  rank = cosine_similarity(df_embs, query_emb)
 
-# filter data according to threshold
-df_res = pd.concat([df_profile['symbol'], pd.DataFrame(rank, columns=['cosine'])], axis=1)
-df_res = df_res.sort_values(by='cosine', ascending=False)
-df_res = df_res[df_res['cosine'] > cosine_threshold].dropna()
+  # filter data according to threshold
+  df_res = pd.concat([df_profile['symbol'], pd.DataFrame(rank, columns=['cosine'])], axis=1)
+  df_res = df_res.sort_values(by='cosine', ascending=False)
+  df_res = df_res[df_res['cosine'] > cosine_threshold].dropna()
 
-# find related items
-symbols = df_res['symbol'].values
-res_symbols = list(np.copy(symbols))
-res_rankings = list(np.copy(df_res['cosine'].values))
-for symbol in symbols:
-    df_row = data['sim'].loc[symbol].sort_values(ascending=False)
-    df_row = df_row[df_row > sim_threshold]
-    for col in df_row.index:
-        if isinstance(col, float): continue
-        if len(res_symbols) > max_stocks: break
-        res_symbols.append(col)
-        res_rankings.append(cosine_threshold - 0.05)
-    if len(res_symbols) > max_stocks: break
+  # limit data
+  if df_res.shape[0] > max_stocks:
+    df_res = df_res.iloc[:max_stocks, :]
 
-# combine with relevant profile data
-df_res = pd.DataFrame({'symbol': res_symbols, 'ranking': res_rankings})
-#df_res = pd.merge(df_res, data['profiles'], on='symbol').sort_values(by='ranking', ascending=False)
+  # find related items
+  symbols = df_res['symbol'].values
+  res_symbols = list(np.copy(symbols))
+  res_rankings = list(np.copy(df_res['cosine'].values))
+  for symbol in symbols:
+      if len(res_symbols) >= max_stocks: break
+      df_row = df_sim.loc[symbol].sort_values(ascending=False)
+      df_row = df_row[df_row > sim_threshold]
+      for col in df_row.index:
+          if isinstance(col, float): continue
+          if len(res_symbols) >= max_stocks: break
+          res_symbols.append(col)
+          res_rankings.append(cosine_threshold - 0.05)
 
-st.write("Found {} very relevant and {} relevant stocks for you!".format(len(symbols), len(df_res) - len(symbols)))
+  # combine with relevant profile data
+  df_res = pd.DataFrame({'symbol': res_symbols, 'ranking': res_rankings})
 
-# load relevant stocks
-load_text = st.write("Loading current stock data 🌍...")
-cache = rcmd.stocks.Cache()
-df_stocks = cache.load_stock_data(res_symbols, ticker=data['ticker'], cache=False, load_data=False)
-df_state = cache.load_statement_data(res_symbols, data['statement'], limit=True, cache=False, load_data=False)
+  #df_res = pd.merge(df_res, data['profiles'], on='symbol').sort_values(by='ranking', ascending=False)
 
-# preprocess input data
-load_text.write("Pre-Processing the data 🌎...")
-df_input = rcmd.learning.preprocess.create_input(df_stocks, df_state, model_back)
+  st.write("Found {} very relevant and {} relevant stocks for you!".format(len(symbols), len(df_res) - len(symbols)))
 
-# use model to predict future prices (note: have to ensure the correct order of the input variables)
-load_text.write("Predicting future prices 🌏...")
-df_input_adj = df_input.drop(['symbol'])
-df_pred = model.predict(df_input_adj.to_numpy())
-df_pred = pd.DataFrame(df_pred, columns=['pred'])
-# merge relevant data
-results = pd.concat([df_input['symbol'], df_pred], axis=1)
-results = pd.merge(df_res, results, on='symbol').sort_values(by="ranking", ascending=False)
+  # load relevant stocks
+  load_text = st.text("Loading current stock data ...")
+  cache = rcmd.stocks.Cache()
+  df_stocks = cache.load_stock_data(res_symbols, ticker=ticker, cache=False, load_data=False)
+  df_state = cache.load_statement_data(res_symbols, statement, limit=True, cache=False, load_data=False)
 
-# combine all results
-load_text.write("Results:")
+  # preprocess input data
+  load_text.text("Pre-Processing the data ...")
+  df_input = rcmd.learning.preprocess.create_input(df_stocks, df_state, model_back)
 
-# iterate through enlarged stocks
-for symbol in results.iloc[:max_enlarge, 'symbol'].unique():
-  st.write("**Stock - {}:**".format(symbol))
-  res = results[results['symbol'] == symbol]
-  st.write('  Score: {} - Prediction: {}'.format(res['ranking'].iloc[0], res['pred'].iloc[0]))
-  stock = df_stocks[df_stocks['symbol'] == symbol].set_index('date').sort_index(ascending=True)
-  st.line_chart(stock['close'])
-  # TODO: might show statement data
+  # use model to predict future prices (note: have to ensure the correct order of the input variables)
+  load_text.text("Predicting future prices ...")
+  df_input_adj = df_input.drop(['symbol', 'norm_price'], axis=1)
+  df_pred = model.predict(df_input_adj.to_numpy())
+  df_pred = pd.DataFrame(df_pred.argmax(axis=1), columns=['pred'])
+  # merge relevant data
+  results = pd.concat([df_input.reset_index()['symbol'], df_pred.reset_index()], axis=1)
+  results = pd.merge(df_res, results, on='symbol').sort_values(by="ranking", ascending=False)
 
-# display remaining as dataframe
-if results.shape[0] > max_enlarge:
-  st.write("Remaining:")
-  st.text(results.iloc[max_enlarge:])
+  # combine all results
+  load_text.text("Results:")
+
+  # iterate through enlarged stocks
+  for symbol in results.iloc[:max_enlarged]['symbol'].values:
+    st.write("**Stock - {}:**".format(symbol))
+    res = results[results['symbol'] == symbol]
+    st.write('  Score: {} - Prediction: {}'.format(res['ranking'].iloc[0], res['pred'].iloc[0]))
+    stock = df_stocks[df_stocks['symbol'] == symbol].reset_index().set_index('date').sort_index(ascending=True)
+    st.line_chart(stock['close'])
+    # TODO: might show statement data
+
+  # display remaining as dataframe
+  if results.shape[0] > max_enlarged:
+    st.write("Remaining:")
+    st.text(results.iloc[max_enlarged:, :])

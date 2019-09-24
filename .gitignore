@@ -5,3 +5,4 @@ data/*.zip
 data/ETFs
 data/Stocks
 data/*.csv
+data/*.h5

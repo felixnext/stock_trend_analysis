@@ -188,30 +188,29 @@ A simple network using only four densely connected layers (128, 256, 128, 5) to 
 
 | **Model** | F1 Score | Precision | Recall |
 | --------- | -------- | --------- | ------ |
-| Logistic Regression (Baseline) | 0.27 | 0.5 | 0.18 |
-| Gaussian Mixture Models |
+| Logistic Regression (Baseline) | .27 | .5 | .18 |
 | Support Vector Machines | .41 | .54 | .33 |
 | Neural Network (Simple) | .48 | .48 | .48 |
-| Neural Network (Complex) |
+| Neural Network (Complex) | .49 | .49 | .49 |
 
 > Note: During experiments I found that standard scaled data also provides benefits for neural network architectures.
 
 
 Please note that I did not perform GridSearch for any of the models, though that might be part of future work (together with the analysis of additional input features, such as news-sentiments).
 Overall we can see that the approaches perform better than random (given 6 classes), with a biases towards class representations in the training data (see regarding notebook output for details).
-Nevertheless, the results show a good prediction power for the X approach.
+Nevertheless, the results show a decent prediction power (after all I did not do much optimization here) for the neural network approaches. This is inline with my expectations, as I would assume the data to have non-linear dependencies.
 
 **Regression**
 
-The baseline for regression model would be a linear regression model (based only on the stock information). I would no good results due to the non-linear nature of stock movements under certain conditions, but it may suite as a general indicator.
+As an added bonus I wanted to test the performance of regression models on the same task, as the output values are categories on a scale, they can also be interpreted as a single regression target. In order to measure the regression performance I used MSE (however, I only tested a linear baseline against a simple neural network).
+I only used the data from the last 7 days (without statement data) for the linear regression.
 
+| **Model** | MSE |
+| --------- | -------- |
+| Logistic Regression (Baseline) | .039 |
+| Neural Network | 1.58 |
 
-| **Model** | F1 Score | Precision | Recall |
-| --------- | -------- | --------- | ------ |
-| Logistic Regression (Baseline) | 0.1 | 0.3 | 0.4 |
-| Gaussian Mixture Models |
-| Support Vector Machines |
-| Neural Network |
+Interestingly the neural network has a higher regression score. Further analysis is needed to narrow down the reasons and improve this approach.
 
 ### Recommender
 
@@ -224,6 +223,10 @@ The current recommender process uses glove embeddings based on the descriptions 
 **Stock Prediction**
 
 From the results of the experiments and subjective test sampling, I decided to use X models (specifically the X model) for the final system, as it provided the best results.
+
+Surprising to me was the poor performance of the complex NN model compared to the simple model. Nevertheless, there is much room for improvement (e.g. LSTMs, Residual Networks) to improve the results further.
+
+The regression approaches showed some promise in that regard
 
 **Recommender**
 
