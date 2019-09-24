@@ -215,11 +215,13 @@ The baseline for regression model would be a linear regression model (based only
 
 Since we have no ground-truth data for the similarity between stocks (e.g. a dataset with user-investments), the measuring of the absolute quality of the results is difficult.
 
+The current recommender process uses glove embeddings based on the descriptions in the company profiles to find relevant items and filters them based on a threshold. The found symbols are then used to find similar stocks based on similarity across three categorical features (exchange, sector and industry).
+
 ## Results
 
 **Stock Prediction**
 
-From the results of the experiments and subjective test sampling, I decided to use X models (specificially the X model) for the final system, as it provided the best results.
+From the results of the experiments and subjective test sampling, I decided to use X models (specifically the X model) for the final system, as it provided the best results.
 
 **Recommender**
 
@@ -242,6 +244,8 @@ Such a dataset could be useful to extract further higher order features (e.g. se
 Another way to improve the system would be the usage of more complex prediction methods (e.g. more advanced RNN approaches) or the use of online learning (e.g. through reinforcement learning) to adjust the trading strategy to the user needs.
 Apart from more complex models, there are also biases in the data that should be addressed (e.g. high number of stocks in middle categories).
 
+The recommender system can also be improved in many ways. Including abstraction on the description to find new categorical information (e.g. NER) to perform a better similarity matching, more elaborate pre-processing of the user-queries to better capture their information need and filtering underperform stocks from the beginning, among many others.
+
 From the engineering site, the web-app needs to be updated and the spark process could be streamlined.
 
 
@@ -251,4 +255,4 @@ In this project, we have created a basic trading advisor for stock trading. It c
 
 As with most machine learning pipelines, a large chunk of the work for this project was distributed to pre-processing of the data. Resulting in a large library of functions that provide a solid entry point for further experiments with stock related information system.
 
-The results show that the system can perform TODO.
+The system presented in this project shows promising results as a first vertical prototype. Especially the data pre-processing lies the foundation for other experiments in the area of stock market exploration for me (and hopefully for others as well).

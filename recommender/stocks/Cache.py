@@ -144,7 +144,7 @@ class Cache():
 
     return df_state
 
-  def load_profile_data(self, symbols=None, cache=True):
+  def load_profile_data(self, symbols=None, cache=True, limit=False):
     '''Loads relevant company profiles.
 
     Args:

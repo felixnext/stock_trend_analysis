@@ -13,7 +13,7 @@ First you will need to create a `keys.csv` file in the root directory that conta
 **2. Training:**
 
 
-Next we need to train the machine learning models. TODO
+Next we need to train the machine learning models. This is currently done in the regarding notebook (`03-1_stock-prediction.ipynb`), but will be outsourced into a separate training file in the future.
 
 
 **3. Deploy:**
@@ -26,6 +26,7 @@ $ cd notebooks
 $ streamlit run 09-1_project-report.py
 ```
 
+![Example Video](./imgs/streamlit.gif)
 
 > Note: The web-app is currently not functional, but will come soon.
 
@@ -128,9 +129,8 @@ The pipeline has two core components: The stock classifier (higher order feature
 
 There are multiple approaches for classification that
 
-* MutliOutput - Logistic Regression
+* MutliOutput - Logistic Regression and SVMs
 * Feedforward Network
-* RNN on historic stock data (GRU)
 
 The stock classifier is tested on historic stock data (test-set that is hold-out from the training set). The categories and time-frames are clearly defined.
 
@@ -140,24 +140,27 @@ The performance of the classifier is measured through accuracy and a custom metr
 
 #### Recommender
 
-The recommender
+The recommender is based on NLP parsing of user queries to identify relevant stocks and using the prediction system to rank the stocks. The system can be tested through streamlit by running: `streamlit run notebooks/09-1_project-report.py`
 
 ## Dependencies
 
 I am using the following packages for the system:
 
-* Apache Spark
 * [sklearn-recommender](https://github.com/felixnext/sklearn-recommender) (*note: written for this project, but decoupled into a separate repository*)
-* DS Python Toolstack (Pandas, Numpy, Sklearn, Plotly, Seaborn, sqlalchemy, etc.)
+* DS Python Toolstack (Pandas, Numpy, Sklearn, Seaborn, Matplotlib, etc.)
 * TensorFlow
 
 ## Future Work
 
+* Integration of Spark to handle online learning and real-time data processing (continuous prediction)
 * Create Recommenders for different time frames
 * Integrate multiple higher order features
 * Create additional higher order features (e.g. RNN predictions)
 * Integrate Rule Based approaches (e.g. implement Ben Graham Strategies)
 * Implement better error handling for `financialmodelingprep`
+* Balance Dataset for prediction
+* Test additional NLP approaches (LSTM embeddings through character prediction)
+* Bayesian Networks to measure confidence in stock predictions
 
 ## License
 
