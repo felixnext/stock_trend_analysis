@@ -91,7 +91,10 @@ def create_stock_dataset(df, days_back, days_target, smooth_interval, value_col=
     symbols = df['symbol'].unique()
     # make sure that date column is converted
     if df['date'].dtype == 'object':
-        df['date'] = df['date'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
+      # replace relevant time patterns
+      pattern = '(?P<date>[0-9]+-[0-9]+-[0-9]+)([ ]*(?P<time>[0-9]+:[0-9]+:[0-9]+)(Z|-?\+?[0-9]+(:[0-9]+)?)?)?'
+      repl = lambda m: "{} {}".format(m.group('date'), '00:00:00' if m.group('time') is None else m.group('time'))
+      df['date'] = df['date'].str.replace(pattern, repl, regex=True).apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
 
     # calculate window size and the column names
     win = days_back + days_target + (smooth_interval if smooth_interval is not None else 0)

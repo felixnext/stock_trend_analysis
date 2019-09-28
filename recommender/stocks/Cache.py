@@ -92,7 +92,11 @@ class Cache():
         df_stocks.append(df_stock)
 
     # combine and return
-    return pd.concat(df_stocks, axis=0)
+    if len(df_stocks) > 0:
+      return pd.concat(df_stocks, axis=0, sort=False)
+    else:
+      warnings.warn('No relevant stock data found!')
+      return None
 
   def load_statement_data(self, symbols, statement, limit=False, cache=True, load_missing=True, load_data=True):
     '''Loads merged statement information for all relevant symbols in the dataset.
