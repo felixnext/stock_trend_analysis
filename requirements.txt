@@ -3,7 +3,7 @@ colorama==0.4.1
 feedparser==5.2.1
 iexfinance==0.4.3
 ipykernel==5.1.2
-ipython==7.16.3
+ipython==8.10.0
 jupyter-client==5.3.1
 jupyter-core==4.5.0
 matplotlib==3.0.3
